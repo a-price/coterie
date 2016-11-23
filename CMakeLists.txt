@@ -5,7 +5,7 @@ set(BUILD_FLAGS "-std=c++0x -Wshadow -Wall -Wextra")
 #set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 #set(CMAKE_BUILD_TYPE "Release")
-#add_definitions(-DBOOST_DISABLE_ASSERTS)
+add_definitions(-DBOOST_DISABLE_ASSERTS)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BUILD_FLAGS}")
 
