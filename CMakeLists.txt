@@ -139,12 +139,18 @@ enable_testing()
 if(CATKIN_ENABLE_TESTING)
 #  find_package(rostest REQUIRED)
 
-#  add_executable(test_point_set test/unit/test_point_set.cpp)
-  catkin_add_gtest(test_point_set test/unit/test_point_set.cpp)
-  target_link_libraries(test_point_set
-    ${PROJECT_NAME}
-    ${catkin_LIBRARIES}
-    ${GTEST_LIBRARIES}
-  )
+  # Add all unit tests
+  file(GLOB UTestFiles "test/unit/*.cpp")
+  foreach(utest_file ${UTestFiles})
+    get_filename_component(utest_base ${utest_file} NAME_WE)
+
+#    add_executable(${utest_base} test/unit/${utest_base}.cpp)
+    catkin_add_gtest(${utest_base} test/unit/${utest_base}.cpp)
+    target_link_libraries(${utest_base}
+      ${PROJECT_NAME}
+      ${catkin_LIBRARIES}
+      ${GTEST_LIBRARIES}
+    )
+  endforeach()
 
 endif()

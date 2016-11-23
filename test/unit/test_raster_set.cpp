@@ -1,9 +1,9 @@
 /**
- * \file Set.h
+ * \file test_raster_set.cpp
  * \brief
  *
  * \author Andrew Price
- * \date 2016-11-21
+ * \date 2016-11-23
  *
  * \copyright
  *
@@ -35,63 +35,74 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SET_H
-#define SET_H
+#include "coterie/RasterSet.hpp"
 
-#include <Eigen/Core>
+#include <random>
+#include <gtest/gtest.h>
 
-namespace coterie
-{
-
-template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
-class AABB;
-
-template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
-class Set
+template <unsigned N>
+class RandomIndexGenerator
 {
 public:
-//	typedef AABB<DIM, PointT> AABB;
-	typedef PointT point_type;
-	virtual bool contains(const PointT& q) = 0;
-	virtual AABB<DIM, PointT> getAABB() = 0;
+	RandomIndexGenerator(const coterie::Shape<N>& s)
+	{
+		rng = std::mt19937(rd());
+
+		for (size_t i = 0; i < N; ++i)
+		{
+			generators[i] = std::uniform_int_distribution<int>(0, s[i]-1);
+		}
+	}
+
+	coterie::Index<N> getIndex()
+	{
+		coterie::Index<N> idx;
+		for (size_t i = 0; i < N; ++i)
+		{
+			idx[i] = generators[i](rng);
+		}
+		return idx;
+	}
+
+	std::random_device rd;
+	std::mt19937 rng;
+	std::array<std::uniform_int_distribution<int>, N> generators;
 };
 
-template<unsigned int DIM, typename PointT>
-class AABB : public Set<DIM, PointT>
+TEST(RasterSet, testContains)
 {
-public:
-	PointT min;
-	PointT max;
+	const int N = 2;
+	coterie::RasterSet<N>::Shape shape{5,5};
+	coterie::RasterSet<N>::Bounds bounds{{{-1,1},{-1,1}}};
+	coterie::RasterSet<N> rs(shape, bounds);
 
-	static AABB InitialBox()
+	RandomIndexGenerator<N> rig(shape);
+	for (int rep = 0; rep < 5; ++rep)
 	{
-		AABB aabb;
-		for (size_t d=0; d<DIM; ++d)
+		coterie::RasterSet<N>::Index index = rig.getIndex();
+		for (size_t i = 0; i < N; ++i)
 		{
-			aabb.min[d] = std::numeric_limits<double>::infinity();
-			aabb.max[d] = -std::numeric_limits<double>::infinity();
+			ASSERT_TRUE(index[i] >= 0);
+			ASSERT_TRUE(index[i] < static_cast<long int>(shape[i]));
 		}
-		return aabb;
+		rs.data(index) = true;
 	}
 
-	virtual bool contains(const PointT &q)
+	coterie::AABB<N> aabb = rs.getAABB();
+	const unsigned nElements = rs.data.num_elements();
+	for (size_t i = 0; i < nElements; ++i)
 	{
-		bool isInside = true;
-		for (size_t d=0; d<DIM; ++d)
+		coterie::RasterSet<N>::Index idx = rs.getCell(i);
+		if (rs.data(idx))
 		{
-			isInside = isInside && (q[d] >= min[d]);
-			isInside = isInside && (q[d] <= max[d]);
+			ASSERT_TRUE(aabb.contains(rs.getState(idx)));
 		}
-		return isInside;
 	}
-
-	virtual AABB<DIM, PointT> getAABB()
-	{
-		return *this;
-	}
-};
-
-
 }
 
-#endif // SET_H
+int main(int argc, char **argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+
+    return RUN_ALL_TESTS();
+}

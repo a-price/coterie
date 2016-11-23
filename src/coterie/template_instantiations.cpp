@@ -36,11 +36,18 @@
  */
 
 #include "coterie/PointSet.hpp"
+#include "coterie/RasterSet.hpp"
 
 namespace coterie
 {
+template class PointSet<1>;
 template class PointSet<2>;
 template class PointSet<3>;
 template class PointSet<4>;
 template class PointSet<6>;
+template class RasterSet<1>;
+template class RasterSet<2>;
+template class RasterSet<3>;
+template class RasterSet<4>;
+template class RasterSet<6>;
 }

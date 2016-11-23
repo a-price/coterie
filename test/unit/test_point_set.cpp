@@ -53,6 +53,12 @@ TEST(PointSet, testContains)
 	ASSERT_TRUE(ps.contains({0,0}));
 	ASSERT_TRUE(ps.contains({3.14159,2.71828}));
 	ASSERT_FALSE(ps.contains({1,1}));
+
+	coterie::AABB<2> aabb = ps.getAABB();
+	for (const coterie::PointSet<2>::point_type& p : ps.members)
+	{
+		ASSERT_TRUE(aabb.contains(p));
+	}
 }
 
 

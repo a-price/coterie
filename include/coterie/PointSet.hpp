@@ -46,60 +46,6 @@
 #include <set>
 #include <assert.h>
 
-namespace std
-{
-
-//template<unsigned int DIM>
-//struct less< Eigen::Matrix<double, DIM, 1> >
-//{
-//	bool operator()(const Eigen::Matrix<double, DIM, 1>& a,
-//	                const Eigen::Matrix<double, DIM, 1>& b)
-//	{
-//		assert(a.size()==b.size()==DIM);
-//		for(size_t i=0;i<DIM;++i)
-//		{
-//			if(a[i]<b[i]) return true;
-//			if(a[i]>b[i]) return false;
-//		}
-//		return false;
-//	}
-//};
-
-//template struct less< Eigen::Matrix<double, 1, 1> >;
-//template struct less< Eigen::Matrix<double, 2, 1> >;
-//template struct less< Eigen::Matrix<double, 3, 1> >;
-//template struct less< Eigen::Matrix<double, 4, 1> >;
-//template struct less< Eigen::Matrix<double, 5, 1> >;
-//template struct less< Eigen::Matrix<double, 6, 1> >;
-
-//template<>
-//std::less<Eigen::VectorXd>(Eigen::VectorXd const& a,
-//                           Eigen::VectorXd const& b)
-//{
-//	assert(a.size()==b.size());
-//	for(size_t i=0;i<a.size();++i)
-//	{
-//		if(a[i]<b[i]) return true;
-//		if(a[i]>b[i]) return false;
-//	}
-//	return false;
-//}
-
-}
-
-//template<unsigned int DIM>
-//bool operator<(const Eigen::Matrix<double, DIM, 1>& a,
-//               const Eigen::Matrix<double, DIM, 1>& b)
-//{
-//	assert(a.size()==b.size()==DIM);
-//	for(size_t i=0;i<DIM;++i)
-//	{
-//		if(a[i]<b[i]) return true;
-//		if(a[i]>b[i]) return false;
-//	}
-//	return false;
-//}
-
 namespace coterie
 {
 
@@ -109,8 +55,8 @@ struct vector_less_than
 	bool operator()(const Eigen::Matrix<double, DIM, 1>& a,
 	                const Eigen::Matrix<double, DIM, 1>& b) const
 	{
-		assert(a.size()==b.size()==DIM);
-		for(size_t i=0;i<DIM;++i)
+		assert(a.size()==DIM && b.size()==DIM);
+		for(size_t i=0; i<DIM; ++i)
 		{
 			if(a[i]<b[i]) return true;
 			if(a[i]>b[i]) return false;
@@ -145,8 +91,28 @@ class PointSet : public Set<DIM, PointT>
 {
 public:
 	RosterT members;
-	virtual bool contains(const PointT& q) { return ::coterie::contains(members, q); }
+	virtual bool contains(const PointT& q) override { return ::coterie::contains(members, q); }
+	virtual AABB<DIM, PointT> getAABB() override;
 };
+
+template<unsigned int DIM,
+         typename PointT,
+         typename RosterT >
+AABB<DIM, PointT> PointSet<DIM, PointT, RosterT>::getAABB()
+{
+	AABB<DIM, PointT> aabb = AABB<DIM, PointT>::InitialBox();
+
+	for (const PointT& p : members)
+	{
+		for (size_t d=0; d<DIM; ++d)
+		{
+			aabb.min[d] = std::min(aabb.min[d], p[d]);
+			aabb.max[d] = std::max(aabb.max[d], p[d]);
+		}
+	}
+
+	return aabb;
+}
 
 
 
