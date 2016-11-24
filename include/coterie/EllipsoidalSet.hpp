@@ -93,6 +93,8 @@ public:
 		return aabb;
 	}
 
+	virtual bool isConvex() override { return true; }
+
 	// Line segment connects (first*nHat, second*nHat)
 	std::pair<double, double> projectToCenteredRay(const Eigen::Matrix<double, DIM, 1>& nHat)
 	{

@@ -1,9 +1,9 @@
 /**
- * \file template_instantiations.cpp
+ * \file test_polytope_set.cpp
  * \brief
  *
  * \author Andrew Price
- * \date 2016-11-22
+ * \date 2016-11-23
  *
  * \copyright
  *
@@ -35,31 +35,50 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "coterie/PointSet.hpp"
-#include "coterie/RasterSet.hpp"
-#include "coterie/EllipsoidalSet.hpp"
 #include "coterie/PolytopeSet.hpp"
 
-namespace coterie
+#include <gtest/gtest.h>
+
+TEST(PolytopeSet, testContains)
 {
-template class PointSet<1>;
-template class PointSet<2>;
-template class PointSet<3>;
-template class PointSet<4>;
-template class PointSet<6>;
-template class RasterSet<1>;
-template class RasterSet<2>;
-template class RasterSet<3>;
-template class RasterSet<4>;
-template class RasterSet<6>;
-template class EllipsoidalSet<1>;
-template class EllipsoidalSet<2>;
-template class EllipsoidalSet<3>;
-template class EllipsoidalSet<4>;
-template class EllipsoidalSet<6>;
-template class PolytopeSet<1>;
-template class PolytopeSet<2>;
-template class PolytopeSet<3>;
-template class PolytopeSet<4>;
-template class PolytopeSet<6>;
+	coterie::PointSet<2> points;
+	for (size_t i = 0; i < 50; ++i)
+	{
+		points.members.insert(coterie::PointSet<2>::point_type::Random());
+	}
+	points.members.insert({ 1, 1});
+	points.members.insert({ 1,-1});
+	points.members.insert({-1, 1});
+	points.members.insert({-1,-1});
+
+	coterie::PolytopeSet<2> es(points);
+	coterie::AABB<2> aabb = es.getAABB();
+
+	for (size_t i = 0; i < 50; ++i)
+	{
+		coterie::PointSet<2>::point_type p = coterie::PointSet<2>::point_type::Random();
+		ASSERT_TRUE(es.contains(p));
+		ASSERT_TRUE(aabb.contains(p));
+	}
+
+	ASSERT_FALSE(es.contains({1.01,0}));
+	ASSERT_FALSE(aabb.contains({1.01,0}));
+
+	ASSERT_FALSE(es.contains({0,1.01}));
+	ASSERT_FALSE(aabb.contains({0,1.01}));
+
+	ASSERT_FALSE(es.contains({-1.01,0}));
+	ASSERT_FALSE(aabb.contains({-1.01,0}));
+
+	ASSERT_FALSE(es.contains({0,-1.01}));
+	ASSERT_FALSE(aabb.contains({0,-1.01}));
+
+}
+
+
+int main(int argc, char **argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+
+    return RUN_ALL_TESTS();
 }

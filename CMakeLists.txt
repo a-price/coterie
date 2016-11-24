@@ -7,6 +7,10 @@ set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 #set(CMAKE_BUILD_TYPE "Release")
 add_definitions(-DBOOST_DISABLE_ASSERTS)
 
+# Add additional CMake files
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+
+# Set build flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BUILD_FLAGS}")
 
 ## Find catkin macros and libraries
@@ -26,6 +30,10 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 find_package(Eigen REQUIRED)
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
+
+find_package(Qhull REQUIRED)
+include_directories(SYSTEM ${QHULL_INCLUDE_DIR})
+link_libraries(${QHULL_LIBRARIES})
 
 ################################################
 ## Declare ROS messages, services and actions ##

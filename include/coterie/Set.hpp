@@ -54,6 +54,7 @@ public:
 	typedef PointT point_type;
 	virtual bool contains(const PointT& q) = 0;
 	virtual AABB<DIM, PointT> getAABB() = 0;
+	virtual bool isConvex() { return false; }
 };
 
 template<unsigned int DIM, typename PointT>
