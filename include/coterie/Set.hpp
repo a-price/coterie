@@ -52,10 +52,12 @@ class Set
 public:
 //	typedef AABB<DIM, PointT> AABB;
 	typedef PointT point_type;
-	virtual bool contains(const PointT& q) = 0;
+	virtual bool contains(const PointT& q) const = 0;
 	virtual AABB<DIM, PointT> getAABB() = 0;
 	virtual bool isConvex() { return false; }
 };
+
+// TODO: Add generative set
 
 template<unsigned int DIM, typename PointT>
 class AABB : public Set<DIM, PointT>
@@ -75,7 +77,7 @@ public:
 		return aabb;
 	}
 
-	virtual bool contains(const PointT &q)
+	virtual bool contains(const PointT &q) const
 	{
 		bool isInside = true;
 		for (size_t d=0; d<DIM; ++d)
@@ -118,6 +120,15 @@ public:
 		return v;
 	}
 };
+
+template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
+static AABB<DIM, PointT> operator+(const AABB<DIM, PointT>& aabb, const PointT& pt)
+{
+	AABB<DIM, PointT> newBB(aabb);
+	newBB.min += pt;
+	newBB.max += pt;
+	return newBB;
+}
 
 
 }

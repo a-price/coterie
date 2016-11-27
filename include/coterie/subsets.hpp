@@ -1,9 +1,9 @@
 /**
- * \file EllipsoidalSet.hpp
+ * \file subsets.hpp
  * \brief
  *
  * \author Andrew Price
- * \date 2016-11-23
+ * \date 2016-11-27
  *
  * \copyright
  *
@@ -35,77 +35,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ELLIPSOIDALSET_HPP
-#define ELLIPSOIDALSET_HPP
+#ifndef SUBSETS_HPP
+#define SUBSETS_HPP
 
-#include "coterie/Set.hpp"
-
-#include <Eigen/Cholesky>
-#include <Eigen/LU>
+#include "EllipsoidalSet.hpp"
+#include "PointSet.hpp"
+#include "PolytopeSet.hpp"
+#include "RasterSet.hpp"
 
 namespace coterie
 {
 
+//template <class OuterT, class InnerT>
+//bool contains(const OuterT&, const InnerT&)
+//{
+//	static_assert(false, "Generic subset test not implemented.");
+//}
+
+
 template<unsigned int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
-         typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
-class EllipsoidalSet : public Set<DIM, PointT>
+         typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>, vector_less_than<DIM> > >
+bool contains(const Set<DIM, PointT>& outer, const PointSet<DIM, PointT, RosterT>& inner)
 {
-public:
-	PointT c;
-	MatrixT Q;
-	Eigen::LLT<MatrixT> L; // Cholesky decomposition
-	MatrixT Linv;
-
-	/**
-	 * @brief EllipsoidalSet
-	 * @param center Center of the ellipsoid
-	 * @param covar SPD (not SPSD!) covariance matrix
-	 */
-	EllipsoidalSet(const PointT& center, const MatrixT& covar)
-	    : Set<DIM, PointT>(),
-	      c(center),
-	      Q(covar),
-	      L(covar),
-	      Linv(MatrixT(L.matrixL()).inverse())
+	bool isSubset = true;
+	for (const PointT& pt : inner.members)
 	{
-
+		isSubset = isSubset && outer.contains(pt);
 	}
-
-	virtual bool contains(const PointT& q) const override
-	{
-		PointT dist = q-c;
-		return (dist.transpose() * Q * dist) <= 1.0;
-	}
-
-	virtual AABB<DIM, PointT> getAABB() override
-	{
-		// NB: Could specialize since nHat is always a basis vector
-		AABB<DIM, PointT> aabb;
-		for (size_t d=0; d<DIM; ++d)
-		{
-			PointT nHat = PointT::Zero();
-			nHat[d] = 1;
-			std::pair<double, double> extents = projectToCenteredRay(nHat);
-			aabb.min[d] = extents.first;
-			aabb.max[d] = extents.second;
-		}
-		return aabb;
-	}
-
-	virtual bool isConvex() override { return true; }
-
-	// Line segment connects (first*nHat, second*nHat)
-	std::pair<double, double> projectToCenteredRay(const Eigen::Matrix<double, DIM, 1>& nHat)
-	{
-		assert((nHat.squaredNorm() - 1.0) < 1e-6);
-		double s0 = nHat.dot(c);
-		PointT w = Linv * nHat;
-		double wNorm = w.norm();
-		return {s0-wNorm, s0+wNorm};
-	}
-};
+	return isSubset;
+}
 
 }
 
-#endif // ELLIPSOIDALSET_HPP
+#endif // SUBSETS_HPP

@@ -127,6 +127,11 @@ TEST(RasterSet, testView)
 
 	coterie::RasterSetView<N> view = rs.getView(rs.getAABB());
 	ASSERT_EQ(1, view.dataView.size());
+	for (size_t d = 0; d < N; ++d)
+	{
+		ASSERT_EQ(0.0, view.bounds[d].second - view.bounds[d].first);
+		ASSERT_EQ(1, view.axes[d].size());
+	}
 //	rs.data[rs.getCell()]
 }
 

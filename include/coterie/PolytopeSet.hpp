@@ -72,12 +72,13 @@ public:
 		qhull(inputSet);
 	}
 
-	virtual bool contains(const PointT& q) override
+	virtual bool contains(const PointT& q) const override
 	{
+		const double epsilon = 1e-9;
 		bool inSpace = true;
 		for (const Hyperplane<DIM>& h : supportPlanes)
 		{
-			inSpace = inSpace && h.distance >= q.dot(h.normal);
+			inSpace = inSpace && (q.dot(h.normal) <= h.distance + epsilon);
 		}
 		return inSpace;
 	}
@@ -169,12 +170,15 @@ bool PolytopeSet<DIM, PointT>::qhull(const PointSet<DIM, PointT>& inputSet, bool
 	facetT* facet;
 	for (facet=qh_qh->facet_list; facet && facet->next; facet=facet->next)
 	{
+		// NB: Per http://www.qhull.org/html/index.htm#structure,
+		// QHull represents halfspaces in the format Vx+b<0, with V=nHat^T.
+		// Our halfspace representation is Vx<b, so we need the negative offset
 		assert(facet->normal);
 		Hyperplane<DIM> h;
 		h.distance = -facet->offset;
 		for (int i = 0; i < DIM; ++i)
 		{
-			h.normal[i] = -facet->normal[i];
+			h.normal[i] = facet->normal[i];
 		}
 
 		supportPlanes.push_back(h);

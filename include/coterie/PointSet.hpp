@@ -91,7 +91,7 @@ class PointSet : public Set<DIM, PointT>
 {
 public:
 	RosterT members;
-	virtual bool contains(const PointT& q) override { return ::coterie::contains(members, q); }
+	virtual bool contains(const PointT& q) const override { return ::coterie::contains(members, q); }
 	virtual AABB<DIM, PointT> getAABB() override;
 };
 
