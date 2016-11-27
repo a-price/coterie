@@ -96,8 +96,38 @@ TEST(RasterSet, testContains)
 		if (rs.data(idx))
 		{
 			ASSERT_TRUE(aabb.contains(rs.getState(idx)));
+			ASSERT_TRUE(rs.contains(rs.getState(rs.getCell(rs.getState(idx)))));
 		}
 	}
+}
+
+TEST(RasterSet, testRangesToShape)
+{
+	typedef boost::multi_array_types::index_range range;
+	const int N = 6;
+	coterie::RasterSetView<N>::Ranges ranges = {{range{2,8},range{5,10},range{3,7},range{10,13},range{2,4},range{8,9}}};
+	coterie::RasterSetView<N>::Shape testShape = coterie::RasterSetView<N>::rangesToShape(ranges);
+	coterie::RasterSetView<N>::Shape shape{6,5,4,3,2,1};
+	for (size_t d = 0; d < N; ++d)
+	{
+		ASSERT_EQ(shape[d], testShape[d]);
+	}
+}
+
+TEST(RasterSet, testView)
+{
+	const int N = 2;
+	coterie::RasterSet<N>::Shape shape{5,5};
+	coterie::RasterSet<N>::Bounds bounds{{{-1,1},{-1,1}}};
+	coterie::RasterSet<N> rs(shape, bounds);
+
+	RandomIndexGenerator<N> rig(shape);
+	coterie::RasterSet<N>::Index index = rig.getIndex();
+	rs.data(index) = true;
+
+	coterie::RasterSetView<N> view = rs.getView(rs.getAABB());
+	ASSERT_EQ(1, view.dataView.size());
+//	rs.data[rs.getCell()]
 }
 
 int main(int argc, char **argv)

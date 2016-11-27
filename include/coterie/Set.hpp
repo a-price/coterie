@@ -90,6 +90,33 @@ public:
 	{
 		return *this;
 	}
+
+	virtual bool isConvex()
+	{
+		return true;
+	}
+
+	bool isWellFormed() const
+	{
+		bool valid = true;
+		for (size_t d = 0; d < DIM; ++d)
+		{
+			valid = valid && (max[d] >= min[d]);
+		}
+		return valid;
+	}
+
+	double getVolume() const
+	{
+		double v = 1;
+		for (size_t d=0; d<DIM; ++d)
+		{
+			double len = max[d] - min[d];
+			v *= len;
+		}
+		if (v > 0 && !isWellFormed()) { v = -v; } // Return a negative volume for invalid
+		return v;
+	}
 };
 
 

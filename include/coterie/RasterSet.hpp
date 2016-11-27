@@ -62,7 +62,7 @@ using Shape = boost::array<size_t, DIM>;
 
 template<unsigned int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1> >
-class RasterSetView : public Set<DIM, PointT>
+class RasterSetBase : public Set<DIM, PointT>
 {
 public:
 	typedef ::coterie::Axes<DIM> Axes;
@@ -74,7 +74,7 @@ public:
 	Shape shape;
 	Bounds bounds;
 
-	RasterSetView(const Shape& _shape, const Bounds& _bounds)
+	RasterSetBase(const Shape& _shape, const Bounds& _bounds)
 	    : Set<DIM, PointT>(),
 	      shape(_shape),
 	      bounds(_bounds)
@@ -84,18 +84,68 @@ public:
 			axes[d].setLinSpaced(shape[d], bounds[d].first, bounds[d].second);
 		}
 	}
+
+	PointT getState(const Index& idx) const;
+	Index getCell(const PointT& q) const;
+	Index getCell(size_t index) const;
 };
+
+
+template<unsigned int DIM, typename PointT, typename StorageT>
+AABB<DIM, PointT> getActiveAABB(const RasterSetBase<DIM, PointT>& rsb, const StorageT& data)
+{
+	typedef typename RasterSetBase<DIM, PointT>::Index Index;
+	Index minIdx; std::fill(minIdx.begin(), minIdx.end(), std::numeric_limits<typename Index::value_type>::max());
+	Index maxIdx; std::fill(maxIdx.begin(), maxIdx.end(), std::numeric_limits<typename Index::value_type>::min());
+
+	// TODO: More efficient version of this
+	bool isEmpty = true;
+	const unsigned nElements = data.num_elements();
+	for (size_t i = 0; i < nElements; ++i)
+	{
+		Index idx = rsb.getCell(i);
+		if (data(idx))
+		{
+			isEmpty = false;
+			for (size_t d=0; d<DIM; ++d)
+			{
+				minIdx[d] = std::min(minIdx[d], idx[d]);
+				maxIdx[d] = std::max(maxIdx[d], idx[d]);
+			}
+		}
+	}
+
+	AABB<DIM, PointT> aabb;
+	if (isEmpty)
+	{
+		throw std::runtime_error("Operation not implemented.");
+//		aabb.min = PointT::Ones() * std::numeric_limits<typename PointT::Scalar>::max();
+//		aabb.max = PointT::Ones() * std::numeric_limits<typename PointT::Scalar>::min();
+	}
+	else
+	{
+		aabb.min = rsb.getState(minIdx);
+		aabb.max = rsb.getState(maxIdx);
+	}
+	return aabb;
+}
+
+// Forward declare set view
+template<unsigned int DIM,
+         typename PointT=Eigen::Matrix<double, DIM, 1> >
+class RasterSetView;
 
 
 template<unsigned int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1> >
-class RasterSet : public RasterSetView<DIM, PointT>
+class RasterSet : public RasterSetBase<DIM, PointT>
 {
 public:
-	typedef ::coterie::Axes<DIM> Axes;
-	typedef ::coterie::Bounds<DIM> Bounds;
-	typedef ::coterie::Index<DIM> Index;
-	typedef ::coterie::Shape<DIM> Shape;
+	typedef RasterSetBase<DIM, PointT> Base;
+	typedef typename Base::Axes Axes;
+	typedef typename Base::Bounds Bounds;
+	typedef typename Base::Index Index;
+	typedef typename Base::Shape Shape;
 	typedef ::coterie::StateSet<DIM> StateSet;
 
 	StateSet data;
@@ -105,14 +155,90 @@ public:
 	virtual bool contains(const PointT& q) override;
 	virtual AABB<DIM, PointT> getAABB() override;
 
-	PointT getState(const Index& idx) const;
-	Index getCell(const PointT& q) const;
-	Index getCell(size_t index) const;
+	RasterSetView<DIM, PointT> getView(const AABB<DIM, PointT>& aabb);
 };
+
+// Helper functor to build indices.
+template<typename RangeArrayType, size_t Dimension>
+struct IndicesBuilder {
+   // Recursively invoke the functor for the next lowest dimension and
+   // add the next range.
+   static auto build(const RangeArrayType& range)
+      -> decltype(IndicesBuilder<RangeArrayType, Dimension - 1>::build(range)[range[Dimension - 1]]) {
+      return IndicesBuilder<RangeArrayType, Dimension - 1>::build(range)[range[Dimension - 1]];
+   }
+};
+
+// Helper functor specialization to terminate recursion.
+template<typename RangeArrayType>
+struct IndicesBuilder<RangeArrayType, 1> {
+   static auto build(const RangeArrayType& range)
+      -> decltype(boost::indices[range[0]]) {
+      return boost::indices[range[0]];
+   }
+};
+
+
+template<unsigned int DIM, typename PointT>
+class RasterSetView : public RasterSetBase<DIM, PointT>
+{
+public:
+	typedef RasterSetBase<DIM, PointT> Base;
+	typedef typename Base::Axes Axes;
+	typedef typename Base::Bounds Bounds;
+	typedef typename Base::Index Index;
+	typedef typename Base::Shape Shape;
+	typedef boost::multi_array_types::index_range Range; // NB: Range(low, high) is [low, high)
+	typedef std::array<Range, DIM> Ranges;
+	typedef boost::multi_array<bool, DIM> Array;
+	typedef typename Array::template array_view<DIM>::type View;
+
+	View dataView;
+
+	RasterSetView(RasterSet<DIM, PointT>& rasterSet, const Ranges& ranges)
+	    : RasterSetBase<DIM, PointT>(rangesToShape(ranges), rangesToBounds(ranges, rasterSet.axes)),
+	      dataView(rasterSet.data[IndicesBuilder<Ranges, DIM>::build(ranges)])
+	{
+
+	}
+
+	virtual bool contains(const PointT& q) override
+	{
+		return dataView(this->getCell(q));
+	}
+
+	virtual AABB<DIM, PointT> getAABB() override
+	{
+		return getActiveAABB(*this, dataView);
+	}
+
+	static Shape rangesToShape(const Ranges& ranges)
+	{
+		Shape shape;
+		for (size_t d = 0; d < DIM; ++d)
+		{
+			const Range& r = ranges[d];
+			shape[d] = r.finish() - r.start();
+		}
+		return shape;
+	}
+
+	static Bounds rangesToBounds(const Ranges& ranges, const Axes& axes)
+	{
+		Bounds newBounds;
+		for (size_t d = 0; d < DIM; ++d)
+		{
+			const Range& r = ranges[d];
+			newBounds[d] = {axes[d][r.start()], axes[d][r.finish()-1]};
+		}
+		return newBounds;
+	}
+};
+
 
 template<unsigned int DIM, typename PointT>
 RasterSet<DIM, PointT>::RasterSet(const RasterSet::Shape& _shape, const RasterSet::Bounds& _bounds)
-    : RasterSetView<DIM, PointT>(_shape, _bounds),
+    : RasterSetBase<DIM, PointT>(_shape, _bounds),
       data(_shape)
 {
 
@@ -121,36 +247,17 @@ RasterSet<DIM, PointT>::RasterSet(const RasterSet::Shape& _shape, const RasterSe
 template<unsigned int DIM, typename PointT>
 bool RasterSet<DIM, PointT>::contains(const PointT& q)
 {
-	return data(getCell(q));
+	return data(this->getCell(q));
 }
 
 template<unsigned int DIM, typename PointT>
 AABB<DIM, PointT> RasterSet<DIM, PointT>::getAABB()
 {
-	// TODO: More efficient version of this
-	Index minIdx{std::numeric_limits<long int>::max()};
-	Index maxIdx{std::numeric_limits<long int>::min()};
-	const unsigned nElements = data.num_elements();
-	for (size_t i = 0; i < nElements; ++i)
-	{
-		Index idx = getCell(i);
-		if (data(idx))
-		{
-			for (size_t d=0; d<DIM; ++d)
-			{
-				minIdx[d] = std::min(minIdx[d], idx[d]);
-				maxIdx[d] = std::max(maxIdx[d], idx[d]);
-			}
-		}
-	}
-	AABB<DIM, PointT> aabb;
-	aabb.min = getState(minIdx);
-	aabb.max = getState(maxIdx);
-	return aabb;
+	return getActiveAABB(*this, data);
 }
 
 template<unsigned int DIM, typename PointT>
-PointT RasterSet<DIM, PointT>::getState(const Index& idx) const
+PointT RasterSetBase<DIM, PointT>::getState(const Index& idx) const
 {
 	PointT x;
 	for (size_t d = 0; d < DIM; ++d) { x[d] = this->axes[d][idx[d]]; }
@@ -158,13 +265,13 @@ PointT RasterSet<DIM, PointT>::getState(const Index& idx) const
 }
 
 template<unsigned int DIM, typename PointT>
-Index<DIM> RasterSet<DIM, PointT>::getCell(const PointT& point) const
+typename RasterSetBase<DIM, PointT>::Index RasterSetBase<DIM, PointT>::getCell(const PointT& point) const
 {
 	Index idx;
 	for (size_t d = 0; d < DIM; ++d)
 	{
 		assert(point[d] >= this->bounds[d].first);
-		assert(point[d] < this->bounds[d].second);
+		assert(point[d] <= this->bounds[d].second);
 		idx[d] = static_cast<int>(static_cast<double>(this->shape[d]-1)
 		                          * (point[d]-this->bounds[d].first)/(this->bounds[d].second-this->bounds[d].first));
 	}
@@ -177,7 +284,7 @@ Index<DIM> RasterSet<DIM, PointT>::getCell(const PointT& point) const
 // (A,B,C)[i,j,k] -> (B*C)*i + C*j + k
 // (M,N,O,P)[i,j,k,l] -> (N*O*P)*i + (O*P)*j + P*k + l
 template<unsigned int DIM, typename PointT>
-Index<DIM> RasterSet<DIM, PointT>::getCell(size_t index) const
+typename RasterSetBase<DIM, PointT>::Index RasterSetBase<DIM, PointT>::getCell(size_t index) const
 {
 	size_t nElements = 1;
 	for (size_t i = 0; i < DIM; ++i)
@@ -200,6 +307,29 @@ Index<DIM> RasterSet<DIM, PointT>::getCell(size_t index) const
 		index -= res[i] * mul;
 	}
 	return res;
+}
+
+template<unsigned int DIM, typename PointT>
+RasterSetView<DIM, PointT> RasterSet<DIM, PointT>::getView(const AABB<DIM, PointT>& aabb)
+{
+	typename RasterSetView<DIM, PointT>::Ranges ranges;
+	if (!aabb.isWellFormed())
+	{
+		for (size_t d = 0; d < DIM; ++d)
+		{
+			ranges[d] = typename RasterSetView<DIM, PointT>::Range(0,0);
+		}
+	}
+	else
+	{
+		Index minIdx = this->getCell(aabb.min);
+		Index maxIdx = this->getCell(aabb.max);
+		for (size_t d = 0; d < DIM; ++d)
+		{
+			ranges[d] = typename RasterSetView<DIM, PointT>::Range(minIdx[d], maxIdx[d]+1);
+		}
+	}
+	return RasterSetView<DIM, PointT>(*this, ranges);
 }
 
 }
