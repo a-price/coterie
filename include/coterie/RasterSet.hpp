@@ -132,7 +132,8 @@ AABB<DIM, PointT> getActiveAABB(const RasterSetBase<DIM, PointT>& rsb, const Sto
 
 // Forward declare set view
 template<unsigned int DIM,
-         typename PointT=Eigen::Matrix<double, DIM, 1> >
+         typename PointT=Eigen::Matrix<double, DIM, 1>,
+         bool isConstView=true >
 class RasterSetView;
 
 
@@ -155,7 +156,8 @@ public:
 	virtual bool contains(const PointT& q) const override;
 	virtual AABB<DIM, PointT> getAABB() const override;
 
-	RasterSetView<DIM, PointT> getView(const AABB<DIM, PointT>& aabb);
+//	RasterSetView<DIM, PointT, false> getView(const AABB<DIM, PointT>& aabb);
+	RasterSetView<DIM, PointT,  true> getView(const AABB<DIM, PointT>& aabb) const;
 };
 
 // Helper functor to build indices.
@@ -178,8 +180,7 @@ struct IndicesBuilder<RangeArrayType, 1> {
    }
 };
 
-
-template<unsigned int DIM, typename PointT>
+template<unsigned int DIM, typename PointT, bool isConstView>
 class RasterSetView : public RasterSetBase<DIM, PointT>
 {
 public:
@@ -191,11 +192,13 @@ public:
 	typedef boost::multi_array_types::index_range Range; // NB: Range(low, high) is [low, high)
 	typedef std::array<Range, DIM> Ranges;
 	typedef boost::multi_array<bool, DIM> Array;
-	typedef typename Array::template array_view<DIM>::type View;
+	typedef typename std::conditional<isConstView,
+	                         typename Array::template const_array_view<DIM>::type,
+	                         typename Array::template array_view<DIM>::type>::type View;
 
 	View dataView;
 
-	RasterSetView(RasterSet<DIM, PointT>& rasterSet, const Ranges& ranges)
+	RasterSetView(const RasterSet<DIM, PointT>& rasterSet, const Ranges& ranges)
 	    : RasterSetBase<DIM, PointT>(rangesToShape(ranges), rangesToBounds(ranges, rasterSet.axes)),
 	      dataView(rasterSet.data[IndicesBuilder<Ranges, DIM>::build(ranges)])
 	{
@@ -310,7 +313,7 @@ typename RasterSetBase<DIM, PointT>::Index RasterSetBase<DIM, PointT>::getCell(s
 }
 
 template<unsigned int DIM, typename PointT>
-RasterSetView<DIM, PointT> RasterSet<DIM, PointT>::getView(const AABB<DIM, PointT>& aabb)
+RasterSetView<DIM, PointT, true> RasterSet<DIM, PointT>::getView(const AABB<DIM, PointT>& aabb) const
 {
 	typename RasterSetView<DIM, PointT>::Ranges ranges;
 	if (!aabb.isWellFormed())
@@ -329,7 +332,7 @@ RasterSetView<DIM, PointT> RasterSet<DIM, PointT>::getView(const AABB<DIM, Point
 			ranges[d] = typename RasterSetView<DIM, PointT>::Range(minIdx[d], maxIdx[d]+1);
 		}
 	}
-	return RasterSetView<DIM, PointT>(*this, ranges);
+	return RasterSetView<DIM, PointT, true>(*this, ranges);
 }
 
 }

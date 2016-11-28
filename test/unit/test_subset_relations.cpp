@@ -97,6 +97,34 @@ TEST(SubsetRelations, testEllipsoidInPolytope)
 	ASSERT_FALSE(contains(poly.getAABB(), es));
 }
 
+TEST(SubsetRelations, testEllipsoidInRaster)
+{
+	const int N = 3;
+	coterie::RasterSet<N>::Shape shape{5,5,5};
+	coterie::RasterSet<N>::Bounds bounds{{{-1,1},{-1,1},{-1,1}}};
+	coterie::RasterSet<N> rs(shape, bounds);
+
+	// Test unit sphere
+	coterie::EllipsoidalSet<3> es(Eigen::Vector3d::Zero(), Eigen::Matrix3d::Identity());
+
+	const unsigned nElements = rs.data.num_elements();
+	for (size_t i = 0; i < nElements; ++i)
+	{
+		coterie::RasterSet<N>::Index idx = rs.getCell(i);
+		coterie::RasterSet<N>::point_type pt = rs.getState(idx);
+		rs.data(idx) = es.contains(pt);
+	}
+
+	ASSERT_TRUE(contains(rs, es));
+	ASSERT_TRUE(contains(rs.getAABB(), es));
+
+	coterie::RasterSet<N>::Index center{3,3,3};
+	rs.data(center) = false;
+
+	ASSERT_FALSE(contains(rs, es));
+	ASSERT_TRUE(contains(rs.getAABB(), es));
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

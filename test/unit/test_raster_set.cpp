@@ -135,6 +135,24 @@ TEST(RasterSet, testView)
 //	rs.data[rs.getCell()]
 }
 
+TEST(RasterSet, testIteration)
+{
+	const int N = 4;
+	coterie::RasterSet<N>::Shape shape{5,5,5,5};
+	coterie::RasterSet<N>::Bounds bounds{{{-1,1},{-1,1},{-1,1},{-1,1}}};
+	coterie::RasterSet<N> rs(shape, bounds);
+
+	const unsigned nElements = rs.data.num_elements();
+	for (size_t i = 0; i < nElements; ++i)
+	{
+		coterie::RasterSet<N>::Index idx = rs.getCell(i);
+		if (rs.data(idx))
+		{
+			FAIL();
+		}
+	}
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

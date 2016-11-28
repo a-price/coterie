@@ -101,6 +101,28 @@ bool contains(const PolytopeSet<DIM, PointT, RosterT>& outer, const EllipsoidalS
 	return isSubset;
 }
 
+template<unsigned int DIM,
+         typename PointT=Eigen::Matrix<double, DIM, 1>,
+         typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
+bool contains(const RasterSet<DIM, PointT>& outer, const EllipsoidalSet<DIM, PointT, MatrixT>& inner)
+{
+	// Get neighborhood of ellipsoid
+	RasterSetView<DIM, PointT> view = outer.getView(inner.getAABB());
+
+	// Check that all cells inside ellipsoid are true
+	const unsigned nElements = view.dataView.num_elements();
+	for (size_t i = 0; i < nElements; ++i)
+	{
+		typename RasterSetView<DIM, PointT>::Index idx = view.getCell(i);
+		const PointT pt = view.getState(idx);
+		if (inner.contains(pt) && !outer.contains(pt))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 }
 
 #endif // SUBSETS_HPP

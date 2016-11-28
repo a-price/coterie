@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(coterie)
 
-set(BUILD_FLAGS "-std=c++0x -Wshadow -Wall -Wextra")
+set(BUILD_FLAGS "-std=c++0x -Wshadow -Wall -Wextra -Wpedantic")
 #set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 #set(CMAKE_BUILD_TYPE "Release")
+
 add_definitions(-DBOOST_DISABLE_ASSERTS)
 
 # Add additional CMake files
@@ -25,7 +26,6 @@ find_package(catkin REQUIRED COMPONENTS
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
 
 find_package(Eigen REQUIRED)
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
