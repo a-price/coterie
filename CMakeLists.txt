@@ -63,7 +63,7 @@ link_libraries(${QHULL_LIBRARIES})
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
-# LIBRARIES ${PROJECT_NAME}
+ LIBRARIES ${PROJECT_NAME} ${QHULL_LIBRARIES}
 #  CATKIN_DEPENDS cmake_modules message_generation roscpp roslib std_msgs visualization_msgs
 #  DEPENDS system_lib
 )
