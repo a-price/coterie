@@ -78,7 +78,7 @@ public:
 		return (dist.transpose() * Q * dist) <= 1.0;
 	}
 
-	virtual AABB<DIM, PointT> getAABB() override
+	virtual AABB<DIM, PointT> getAABB() const override
 	{
 		// NB: Could specialize since nHat is always a basis vector
 		AABB<DIM, PointT> aabb;
@@ -93,10 +93,10 @@ public:
 		return aabb;
 	}
 
-	virtual bool isConvex() override { return true; }
+	virtual bool isConvex() const override { return true; }
 
 	// Line segment connects (first*nHat, second*nHat)
-	std::pair<double, double> projectToCenteredRay(const Eigen::Matrix<double, DIM, 1>& nHat)
+	std::pair<double, double> projectToCenteredRay(const Eigen::Matrix<double, DIM, 1>& nHat) const
 	{
 		assert((nHat.squaredNorm() - 1.0) < 1e-6);
 		double s0 = nHat.dot(c);

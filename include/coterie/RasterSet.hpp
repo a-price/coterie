@@ -153,7 +153,7 @@ public:
 	RasterSet(const Shape& _shape, const Bounds& _bounds);
 
 	virtual bool contains(const PointT& q) const override;
-	virtual AABB<DIM, PointT> getAABB() override;
+	virtual AABB<DIM, PointT> getAABB() const override;
 
 	RasterSetView<DIM, PointT> getView(const AABB<DIM, PointT>& aabb);
 };
@@ -207,7 +207,7 @@ public:
 		return dataView(this->getCell(q));
 	}
 
-	virtual AABB<DIM, PointT> getAABB() override
+	virtual AABB<DIM, PointT> getAABB() const override
 	{
 		return getActiveAABB(*this, dataView);
 	}
@@ -251,7 +251,7 @@ bool RasterSet<DIM, PointT>::contains(const PointT& q) const
 }
 
 template<unsigned int DIM, typename PointT>
-AABB<DIM, PointT> RasterSet<DIM, PointT>::getAABB()
+AABB<DIM, PointT> RasterSet<DIM, PointT>::getAABB() const
 {
 	return getActiveAABB(*this, data);
 }

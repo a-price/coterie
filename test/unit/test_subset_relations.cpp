@@ -63,8 +63,38 @@ TEST(SubsetRelations, testPointSet)
 
 	// Test Polytope set
 	coterie::PolytopeSet<2> poly(ps);
-	ASSERT_TRUE(contains(poly.getAABB(), ps));
 	ASSERT_TRUE(contains(poly, ps));
+	ASSERT_TRUE(contains(poly.getAABB(), ps));
+
+	ps.members.insert({-10,-10});
+
+	ASSERT_FALSE(contains(poly, ps));
+	ASSERT_FALSE(contains(poly.getAABB(), ps));
+}
+
+TEST(SubsetRelations, testEllipsoidInPolytope)
+{
+	// Create a 3D Diamond
+	coterie::PointSet<3> ps;
+	ps.members.insert({0,0,2});
+	ps.members.insert({0,0,-2});
+	ps.members.insert({0,2,0});
+	ps.members.insert({0,-2,0});
+	ps.members.insert({2,0,0});
+	ps.members.insert({-2,0,0});
+	coterie::PolytopeSet<3> poly(ps);
+
+	// Test unit sphere
+	coterie::EllipsoidalSet<3> es(Eigen::Vector3d::Zero(), Eigen::Matrix3d::Identity());
+
+	ASSERT_TRUE(contains(poly, es));
+	ASSERT_TRUE(contains(poly.getAABB(), es));
+
+	// Create larger sphere (size = 3)
+	es = coterie::EllipsoidalSet<3>(Eigen::Vector3d::Zero(), 1.0/pow(3.0,2) * Eigen::Matrix3d::Identity());
+
+	ASSERT_FALSE(contains(poly, es));
+	ASSERT_FALSE(contains(poly.getAABB(), es));
 }
 
 int main(int argc, char **argv)

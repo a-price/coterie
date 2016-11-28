@@ -66,6 +66,41 @@ bool contains(const Set<DIM, PointT>& outer, const PointSet<DIM, PointT, RosterT
 	return isSubset;
 }
 
+template<unsigned int DIM,
+         typename PointT=Eigen::Matrix<double, DIM, 1> >
+bool contains(const AABB<DIM, PointT>& outer, const AABB<DIM, PointT>& inner)
+{
+	bool isSubset = true;
+	for (size_t d = 0; d < DIM; ++d)
+	{
+		isSubset = isSubset && (outer.min[d] <= inner.min[d]) && (inner.max[d] <= outer.max[d]);
+	}
+	return isSubset;
+}
+
+
+template<unsigned int DIM,
+         typename PointT=Eigen::Matrix<double, DIM, 1>,
+         typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
+bool contains(const AABB<DIM, PointT>& outer, const EllipsoidalSet<DIM, PointT, MatrixT>& inner)
+{
+	return contains(outer, inner.getAABB());
+}
+
+template<unsigned int DIM,
+         typename PointT=Eigen::Matrix<double, DIM, 1>,
+         typename MatrixT=Eigen::Matrix<double, DIM, DIM>,
+         typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>, vector_less_than<DIM> > >
+bool contains(const PolytopeSet<DIM, PointT, RosterT>& outer, const EllipsoidalSet<DIM, PointT, MatrixT>& inner)
+{
+	bool isSubset = true;
+	for (const typename PolytopeSet<DIM, PointT, RosterT>::Hyperplane& h : outer.supportPlanes)
+	{
+		isSubset = isSubset && (inner.c.dot(h.normal) + (inner.Linv * h.normal).norm() < h.distance);
+	}
+	return isSubset;
+}
+
 }
 
 #endif // SUBSETS_HPP

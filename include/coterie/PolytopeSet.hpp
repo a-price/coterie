@@ -59,12 +59,14 @@ public:
 };
 
 template<unsigned int DIM,
-         typename PointT=Eigen::Matrix<double, DIM, 1> >
+         typename PointT=Eigen::Matrix<double, DIM, 1>,
+         typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>, vector_less_than<DIM> >  >
 class PolytopeSet : public Set<DIM, PointT>
 {
 public:
-	PointSet<DIM, PointT> supportPoints;
-	std::vector<Hyperplane<DIM>, Eigen::aligned_allocator<Hyperplane<DIM> > > supportPlanes;
+	typedef ::coterie::Hyperplane<DIM, PointT> Hyperplane;
+	PointSet<DIM, PointT, RosterT> supportPoints;
+	std::vector<Hyperplane, Eigen::aligned_allocator<Hyperplane> > supportPlanes;
 
 
 	PolytopeSet(const PointSet<DIM, PointT>& inputSet)
@@ -76,16 +78,16 @@ public:
 	{
 		const double epsilon = 1e-9;
 		bool inSpace = true;
-		for (const Hyperplane<DIM>& h : supportPlanes)
+		for (const Hyperplane& h : supportPlanes)
 		{
 			inSpace = inSpace && (q.dot(h.normal) <= h.distance + epsilon);
 		}
 		return inSpace;
 	}
-	virtual AABB<DIM, PointT> getAABB() override { return supportPoints.getAABB(); }
-	virtual bool isConvex() override { return true; }
+	virtual AABB<DIM, PointT> getAABB() const override { return supportPoints.getAABB(); }
+	virtual bool isConvex() const override { return true; }
 protected:
-	bool qhull(const PointSet<DIM, PointT>& inputSet, bool joggle = false);
+	bool qhull(const PointSet<DIM, PointT, RosterT>& inputSet, bool joggle = false);
 };
 
 extern "C"
@@ -111,8 +113,8 @@ extern "C"
 #endif
 }
 
-template<unsigned int DIM, typename PointT>
-bool PolytopeSet<DIM, PointT>::qhull(const PointSet<DIM, PointT>& inputSet, bool joggle)
+template<unsigned int DIM, typename PointT, typename RosterT>
+bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, RosterT>& inputSet, bool joggle)
 {
 	// True if qhull should free points in qh_freeqhull() or reallocation
 	boolT ismalloc = True;
@@ -174,7 +176,7 @@ bool PolytopeSet<DIM, PointT>::qhull(const PointSet<DIM, PointT>& inputSet, bool
 		// QHull represents halfspaces in the format Vx+b<0, with V=nHat^T.
 		// Our halfspace representation is Vx<b, so we need the negative offset
 		assert(facet->normal);
-		Hyperplane<DIM> h;
+		Hyperplane h;
 		h.distance = -facet->offset;
 		for (int i = 0; i < DIM; ++i)
 		{

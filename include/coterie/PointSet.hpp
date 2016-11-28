@@ -92,13 +92,13 @@ class PointSet : public Set<DIM, PointT>
 public:
 	RosterT members;
 	virtual bool contains(const PointT& q) const override { return ::coterie::contains(members, q); }
-	virtual AABB<DIM, PointT> getAABB() override;
+	virtual AABB<DIM, PointT> getAABB() const override;
 };
 
 template<unsigned int DIM,
          typename PointT,
          typename RosterT >
-AABB<DIM, PointT> PointSet<DIM, PointT, RosterT>::getAABB()
+AABB<DIM, PointT> PointSet<DIM, PointT, RosterT>::getAABB() const
 {
 	AABB<DIM, PointT> aabb = AABB<DIM, PointT>::InitialBox();
 

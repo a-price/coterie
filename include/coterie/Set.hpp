@@ -53,8 +53,8 @@ public:
 //	typedef AABB<DIM, PointT> AABB;
 	typedef PointT point_type;
 	virtual bool contains(const PointT& q) const = 0;
-	virtual AABB<DIM, PointT> getAABB() = 0;
-	virtual bool isConvex() { return false; }
+	virtual AABB<DIM, PointT> getAABB() const = 0;
+	virtual bool isConvex() const { return false; }
 };
 
 // TODO: Add generative set
@@ -88,7 +88,7 @@ public:
 		return isInside;
 	}
 
-	virtual AABB<DIM, PointT> getAABB()
+	virtual AABB<DIM, PointT> getAABB() const
 	{
 		return *this;
 	}
