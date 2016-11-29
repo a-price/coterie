@@ -71,13 +71,22 @@ public:
 
 	PolytopeSet(const PointSet<DIM, PointT>& inputSet)
 	{
-		qhull(inputSet);
+		bool succeeded = qhull(inputSet);
+		if (!succeeded)
+		{
+			succeeded = qhull(inputSet, true);
+		}
+		if (!succeeded)
+		{
+			supportPoints.members.clear();
+			supportPlanes.clear();
+		}
 	}
 
 	virtual bool contains(const PointT& q) const override
 	{
 		const double epsilon = 1e-9;
-		bool inSpace = true;
+		bool inSpace = supportPlanes.size() > 0;
 		for (const Hyperplane& h : supportPlanes)
 		{
 			inSpace = inSpace && (q.dot(h.normal) <= h.distance + epsilon);
@@ -122,14 +131,14 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 	FILE *outfile = NULL;//stderr;
 
 	// option flags for qhull, see qh_opt.htm
-	char* flags;
+	std::string qhull_cmd;
 	if (joggle)
 	{
-		flags = const_cast<char*>(std::string("qhull QJ n").c_str());
+		qhull_cmd = "qhull QJ n";
 	}
 	else
 	{
-		flags = const_cast<char*>(std::string("qhull Qx n").c_str());// qhull_flags.c_str ();
+		qhull_cmd = "qhull Qx n";
 	}
 
 	// error messages from qhull code
@@ -153,7 +162,7 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 
 	// Compute convex hull
 	if(qh_qh) { qh_save_qhull(); }
-	int exitcode = qh_new_qhull (DIM, static_cast<int>(inputSet.members.size()), points, ismalloc, flags, outfile, errfile);
+	int exitcode = qh_new_qhull (DIM, static_cast<int>(inputSet.members.size()), points, ismalloc, const_cast<char*>(qhull_cmd.c_str()), outfile, errfile);
 
 	// 0 if no error from qhull
 	if (exitcode != 0)
