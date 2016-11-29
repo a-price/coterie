@@ -69,6 +69,7 @@ public:
 	typedef ::coterie::Bounds<DIM> Bounds;
 	typedef ::coterie::Index<DIM> Index;
 	typedef ::coterie::Shape<DIM> Shape;
+	typedef ::boost::multi_array_ref<bool,DIM> ArrayRef;
 
 	Axes axes;
 	Shape shape;
@@ -88,6 +89,16 @@ public:
 	PointT getState(const Index& idx) const;
 	Index getCell(const PointT& q) const;
 	Index getCell(size_t index) const;
+
+	virtual const typename ArrayRef::element& operator ()(const Index& idx) const = 0;
+	virtual typename ArrayRef::const_reference operator [](const typename ArrayRef::index& idx) const = 0;
+
+	virtual bool operator ==(const RasterSetBase<DIM, PointT>& other) const
+	{
+		return (axes == other.axes) &&
+		       (bounds == other.bounds) &&
+		       (shape == other.shape);
+	}
 };
 
 
@@ -158,6 +169,13 @@ public:
 
 //	RasterSetView<DIM, PointT, false> getView(const AABB<DIM, PointT>& aabb);
 	RasterSetView<DIM, PointT,  true> getView(const AABB<DIM, PointT>& aabb) const;
+
+	typename StateSet::element& operator ()(const Index& idx) { return data(idx); }
+	const typename StateSet::element& operator ()(const Index& idx) const { return data(idx); }
+	typename StateSet::reference operator [](const typename StateSet::index& idx) { return data[idx]; }
+	typename StateSet::const_reference operator [](const typename StateSet::index& idx) const { return data[idx]; }
+
+	bool operator ==(const RasterSet<DIM, PointT>& other) const { return (Base::operator ==(other)) && (data == other.data);}
 };
 
 // Helper functor to build indices.
@@ -236,6 +254,11 @@ public:
 		}
 		return newBounds;
 	}
+
+	typename View::element& operator ()(const Index& idx) { return dataView(idx); }
+	const typename View::element& operator ()(const Index& idx) const { return dataView(idx); }
+	typename View::reference operator [](const typename View::index& idx) { return dataView[idx]; }
+	typename View::const_reference operator [](const typename View::index& idx) const { return dataView[idx]; }
 };
 
 

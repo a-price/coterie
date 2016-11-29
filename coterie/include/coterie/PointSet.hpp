@@ -55,7 +55,6 @@ struct vector_less_than
 	bool operator()(const Eigen::Matrix<double, DIM, 1>& a,
 	                const Eigen::Matrix<double, DIM, 1>& b) const
 	{
-		assert(a.size()==DIM && b.size()==DIM);
 		for(size_t i=0; i<DIM; ++i)
 		{
 			if(a[i]<b[i]) return true;

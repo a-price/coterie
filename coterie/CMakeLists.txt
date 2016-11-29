@@ -17,6 +17,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BUILD_FLAGS}")
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
+  coterie_msgs
   message_generation
   roscpp
   roslib
@@ -35,23 +36,6 @@ find_package(Qhull REQUIRED)
 include_directories(SYSTEM ${QHULL_INCLUDE_DIR})
 link_libraries(${QHULL_LIBRARIES})
 
-################################################
-## Declare ROS messages, services and actions ##
-################################################
-
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
-
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs#   visualization_msgs
-# )
-
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -64,7 +48,7 @@ link_libraries(${QHULL_LIBRARIES})
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ${PROJECT_NAME} ${QHULL_LIBRARIES}
-#  CATKIN_DEPENDS cmake_modules message_generation roscpp roslib std_msgs visualization_msgs
+ CATKIN_DEPENDS cmake_modules roscpp roslib std_msgs visualization_msgs
 #  DEPENDS system_lib
 )
 
@@ -87,16 +71,12 @@ add_library(${PROJECT_NAME}
 # add_dependencies(coterie ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(coterie_node src/coterie_node.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-# add_dependencies(coterie_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-# target_link_libraries(coterie_node
-#   ${catkin_LIBRARIES}
-# )
+add_executable(visualize_rasterset src/nodes/visualize_rasterset.cpp)
+add_dependencies(visualize_rasterset ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(visualize_rasterset
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+)
 
 # Notify any IDE that headers are part of project
 file(GLOB_RECURSE IncludeFiles "include/*")

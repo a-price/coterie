@@ -16,8 +16,10 @@ add_message_files(
   FILES
   AABB.msg
   Hyperplane.msg
+  MultiArrayExtents.msg
   Point.msg
   PointSet.msg
+  RasterSet.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
