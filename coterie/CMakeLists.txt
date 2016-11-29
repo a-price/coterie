@@ -2,8 +2,12 @@ cmake_minimum_required(VERSION 2.8.3)
 project(coterie)
 
 set(BUILD_FLAGS "-std=c++0x -Wshadow -Wall -Wextra -Wpedantic")
+if(NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE RelWithDebInfo ... FORCE)
+   message(STATUS "Setting CMAKE_BUILD_TYPE to ${CMAKE_BUILD_TYPE} (default).")
+endif()
 #set(CMAKE_BUILD_TYPE "Debug")
-set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+#set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 #set(CMAKE_BUILD_TYPE "Release")
 
 add_definitions(-DBOOST_DISABLE_ASSERTS)
