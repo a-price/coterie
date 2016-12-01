@@ -46,24 +46,16 @@
 namespace coterie
 {
 
-//template <class OuterT, class InnerT>
-//bool contains(const OuterT&, const InnerT&)
-//{
-//	static_assert(false, "Generic subset test not implemented.");
-//}
-
-
 template<unsigned int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
          typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>, vector_less_than<DIM> > >
 bool contains(const Set<DIM, PointT>& outer, const PointSet<DIM, PointT, RosterT>& inner)
 {
-	bool isSubset = true;
 	for (const PointT& pt : inner.members)
 	{
-		isSubset = isSubset && outer.contains(pt);
+		if (!outer.contains(pt)) { return false; }
 	}
-	return isSubset;
+	return true;
 }
 
 template<unsigned int DIM,
@@ -93,12 +85,11 @@ template<unsigned int DIM,
          typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>, vector_less_than<DIM> > >
 bool contains(const PolytopeSet<DIM, PointT, RosterT>& outer, const EllipsoidalSet<DIM, PointT, MatrixT>& inner)
 {
-	bool isSubset = true;
 	for (const typename PolytopeSet<DIM, PointT, RosterT>::Hyperplane& h : outer.supportPlanes)
 	{
-		isSubset = isSubset && (inner.c.dot(h.normal) + (inner.Linv * h.normal).norm() < h.distance);
+		if (!(inner.c.dot(h.normal) + (inner.Linv * h.normal).norm() < h.distance)) { return false; }
 	}
-	return isSubset;
+	return true;
 }
 
 template<unsigned int DIM,
@@ -130,12 +121,11 @@ typename std::enable_if<OuterT::is_convex && InnerT::is_convex && InnerT::is_pol
                         OuterT::dimension == InnerT::dimension,
 bool>::type contains(const OuterT& outer, const InnerT& inner)
 {
-	bool isSubset = true;
 	for (const typename InnerT::point_type& pt : inner.getCorners())
 	{
-		isSubset = isSubset && outer.contains(pt);
+		if (!outer.contains(pt)) { return false; }
 	}
-	return isSubset;
+	return true;
 }
 
 }

@@ -92,12 +92,11 @@ public:
 	virtual bool contains(const PointT& q) const override
 	{
 		const double epsilon = 1e-9;
-		bool inSpace = supportPlanes.size() > 0;
 		for (const Hyperplane& h : supportPlanes)
 		{
-			inSpace = inSpace && (q.dot(h.normal) <= h.distance + epsilon);
+			if (!(q.dot(h.normal) <= h.distance + epsilon)) { return false; }
 		}
-		return inSpace;
+		return supportPlanes.size() > 0;
 	}
 	virtual AABB<DIM, PointT> getAABB() const override { return supportPoints.getAABB(); }
 	virtual bool isConvex() const override { return is_convex; }
