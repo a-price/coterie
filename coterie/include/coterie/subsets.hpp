@@ -123,6 +123,21 @@ bool contains(const RasterSet<DIM, PointT>& outer, const EllipsoidalSet<DIM, Poi
 	return true;
 }
 
+template<class OuterT,
+         class InnerT>
+typename std::enable_if<OuterT::is_convex && InnerT::is_convex && InnerT::is_polyhedral &&
+                        std::is_convertible<typename InnerT::point_type, typename OuterT::point_type>::value &&
+                        OuterT::dimension == InnerT::dimension,
+bool>::type contains(const OuterT& outer, const InnerT& inner)
+{
+	bool isSubset = true;
+	for (const typename InnerT::point_type& pt : inner.getCorners())
+	{
+		isSubset = isSubset && outer.contains(pt);
+	}
+	return isSubset;
+}
+
 }
 
 #endif // SUBSETS_HPP

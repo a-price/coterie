@@ -52,6 +52,11 @@ template<unsigned int DIM,
 class EllipsoidalSet : public Set<DIM, PointT>
 {
 public:
+	typedef PointT point_type;
+	typedef MatrixT matrix_type;
+	static constexpr bool is_convex = true;
+	static constexpr unsigned int dimension = DIM;
+
 	PointT c;
 	MatrixT Q;
 	Eigen::LLT<MatrixT> L; // Cholesky decomposition

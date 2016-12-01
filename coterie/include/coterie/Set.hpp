@@ -39,6 +39,9 @@
 #define SET_H
 
 #include <Eigen/Core>
+#include <Eigen/StdVector>
+
+#include <type_traits>
 
 namespace coterie
 {
@@ -50,10 +53,14 @@ template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
 class Set
 {
 public:
-//	typedef AABB<DIM, PointT> AABB;
 	typedef PointT point_type;
+	static constexpr bool is_convex = false;
+	static constexpr unsigned int dimension = DIM;
+
+	typedef ::coterie::AABB<DIM, PointT> AABB;
+
 	virtual bool contains(const PointT& q) const = 0;
-	virtual AABB<DIM, PointT> getAABB() const = 0;
+	virtual AABB getAABB() const = 0;
 	virtual bool isConvex() const { return false; }
 };
 
@@ -63,6 +70,11 @@ template<unsigned int DIM, typename PointT>
 class AABB : public Set<DIM, PointT>
 {
 public:
+	typedef PointT point_type;
+	static constexpr bool is_convex = true;
+	static constexpr bool is_polyhedral = true;
+	static constexpr unsigned int dimension = DIM;
+
 	PointT min;
 	PointT max;
 
@@ -111,13 +123,30 @@ public:
 	double getVolume() const
 	{
 		double v = 1;
-		for (size_t d=0; d<DIM; ++d)
+		for (size_t d = 0; d < DIM; ++d)
 		{
 			double len = max[d] - min[d];
 			v *= len;
 		}
 		if (v > 0 && !isWellFormed()) { v = -v; } // Return a negative volume for invalid
 		return v;
+	}
+
+	std::vector<PointT> getCorners() const
+	{
+		// There will be 2^DIM corners to deal with
+		const int nCorners = (1<<DIM);
+		std::vector<PointT> corners(nCorners);
+		for (size_t perm = 0; perm < nCorners; ++perm)
+		{
+			PointT pt;
+			for (size_t d = 0; d < DIM; ++d)
+			{
+				pt[d] = (perm & (1<<d)) ? min[d] : max[d];
+			}
+			corners[perm] = pt;
+		}
+		return corners;
 	}
 };
 

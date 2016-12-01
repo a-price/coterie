@@ -125,6 +125,42 @@ TEST(SubsetRelations, testEllipsoidInRaster)
 	ASSERT_TRUE(contains(rs.getAABB(), es));
 }
 
+
+TEST(SubsetRelations, testAABBInConvex)
+{
+	coterie::AABB<4> aabb;
+	aabb.min = -0.5 * coterie::AABB<4>::point_type::Ones();
+	aabb.max =  0.5 * coterie::AABB<4>::point_type::Ones();
+
+	ASSERT_EQ(16, aabb.getCorners().size());
+
+	// Create larger sphere (size = 2)
+	coterie::EllipsoidalSet<4> es(Eigen::Vector4d::Zero(), Eigen::Matrix4d::Identity());
+
+	ASSERT_TRUE(contains(es, aabb));
+	ASSERT_FALSE(contains(aabb, es));
+
+	es = coterie::EllipsoidalSet<4>(Eigen::Vector4d::Zero(), 1.0/pow(0.4999,2) * Eigen::Matrix4d::Identity());
+
+	ASSERT_FALSE(contains(es, aabb));
+	ASSERT_TRUE(contains(aabb, es));
+
+	// Create a 4D Diamond
+	coterie::PointSet<4> ps;
+	ps.members.insert({0,0,0,2});
+	ps.members.insert({0,0,0,-2});
+	ps.members.insert({0,0,2,0});
+	ps.members.insert({0,0,-2,0});
+	ps.members.insert({0,2,0,0});
+	ps.members.insert({0,-2,0,0});
+	ps.members.insert({2,0,0,0});
+	ps.members.insert({-2,0,0,0});
+	coterie::PolytopeSet<4> poly(ps);
+
+	ASSERT_TRUE(contains(poly, aabb));
+	ASSERT_FALSE(contains(aabb, poly));
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

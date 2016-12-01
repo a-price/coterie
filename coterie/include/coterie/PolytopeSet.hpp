@@ -64,6 +64,12 @@ template<unsigned int DIM,
 class PolytopeSet : public Set<DIM, PointT>
 {
 public:
+	typedef PointT point_type;
+	typedef RosterT roster_type;
+	static constexpr bool is_convex = true;
+	static constexpr bool is_polyhedral = true;
+	static constexpr unsigned int dimension = DIM;
+
 	typedef ::coterie::Hyperplane<DIM, PointT> Hyperplane;
 	PointSet<DIM, PointT, RosterT> supportPoints;
 	std::vector<Hyperplane, Eigen::aligned_allocator<Hyperplane> > supportPlanes;
@@ -94,7 +100,9 @@ public:
 		return inSpace;
 	}
 	virtual AABB<DIM, PointT> getAABB() const override { return supportPoints.getAABB(); }
-	virtual bool isConvex() const override { return true; }
+	virtual bool isConvex() const override { return is_convex; }
+
+	const RosterT& getCorners() const { return supportPoints.members; }
 protected:
 	bool qhull(const PointSet<DIM, PointT, RosterT>& inputSet, bool joggle = false);
 };

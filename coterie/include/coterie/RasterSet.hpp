@@ -65,6 +65,10 @@ template<unsigned int DIM,
 class RasterSetBase : public Set<DIM, PointT>
 {
 public:
+	typedef PointT point_type;
+	static constexpr bool is_convex = false;
+	static constexpr unsigned int dimension = DIM;
+
 	typedef ::coterie::Axes<DIM> Axes;
 	typedef ::coterie::Bounds<DIM> Bounds;
 	typedef ::coterie::Index<DIM> Index;
@@ -153,6 +157,10 @@ template<unsigned int DIM,
 class RasterSet : public RasterSetBase<DIM, PointT>
 {
 public:
+	typedef PointT point_type;
+	static constexpr bool is_convex = false;
+	static constexpr unsigned int dimension = DIM;
+
 	typedef RasterSetBase<DIM, PointT> Base;
 	typedef typename Base::Axes Axes;
 	typedef typename Base::Bounds Bounds;
@@ -202,6 +210,10 @@ template<unsigned int DIM, typename PointT, bool isConstView>
 class RasterSetView : public RasterSetBase<DIM, PointT>
 {
 public:
+	typedef PointT point_type;
+	static constexpr bool is_convex = false;
+	static constexpr unsigned int dimension = DIM;
+
 	typedef RasterSetBase<DIM, PointT> Base;
 	typedef typename Base::Axes Axes;
 	typedef typename Base::Bounds Bounds;
