@@ -97,6 +97,8 @@ public:
 	virtual const typename ArrayRef::element& operator ()(const Index& idx) const = 0;
 	virtual typename ArrayRef::const_reference operator [](const typename ArrayRef::index& idx) const = 0;
 
+	virtual size_t num_elements() const = 0;
+
 	virtual bool operator ==(const RasterSetBase<DIM, PointT>& other) const
 	{
 		return (axes == other.axes) &&
@@ -182,6 +184,8 @@ public:
 	const typename StateSet::element& operator ()(const Index& idx) const { return data(idx); }
 	typename StateSet::reference operator [](const typename StateSet::index& idx) { return data[idx]; }
 	typename StateSet::const_reference operator [](const typename StateSet::index& idx) const { return data[idx]; }
+
+	virtual size_t num_elements() const override { return data.num_elements(); }
 
 	bool operator ==(const RasterSet<DIM, PointT>& other) const { return (Base::operator ==(other)) && (data == other.data);}
 };
@@ -271,6 +275,8 @@ public:
 	const typename View::element& operator ()(const Index& idx) const { return dataView(idx); }
 	typename View::reference operator [](const typename View::index& idx) { return dataView[idx]; }
 	typename View::const_reference operator [](const typename View::index& idx) const { return dataView[idx]; }
+
+	virtual size_t num_elements() const override { return dataView.num_elements(); }
 };
 
 

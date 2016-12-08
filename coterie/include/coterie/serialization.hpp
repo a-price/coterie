@@ -45,11 +45,11 @@ namespace coterie
 {
 
 template<unsigned int DIM>
-void serialize(const RasterSet<DIM>& set, coterie_msgs::RasterSet& msg)
+void serialize(const RasterSetBase<DIM>& set, coterie_msgs::RasterSet& msg)
 {
 	size_t nElements = 1;
 	for (unsigned int s : set.shape) { nElements *= s; }
-	assert(set.data.num_elements() == nElements);
+	assert(set.num_elements() == nElements);
 
 	size_t mul = nElements;
 	msg.extents.resize(DIM);
@@ -71,7 +71,7 @@ void serialize(const RasterSet<DIM>& set, coterie_msgs::RasterSet& msg)
 	for (size_t i = 0; i < nElements; ++i)
 	{
 		typename RasterSet<DIM>::Index idx = set.getCell(i);
-		msg.byteArray.data[i] = set.data(idx);
+		msg.byteArray.data[i] = set(idx);
 	}
 
 }
