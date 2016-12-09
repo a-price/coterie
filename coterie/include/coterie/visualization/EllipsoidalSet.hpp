@@ -47,9 +47,10 @@
 namespace coterie
 {
 
-template< typename PointT=Eigen::Matrix<double, DIM, 1>,
-          typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
-visualization_msgs::Marker visualizePosition(const EllipsoidalSet<3, PointT, MatrixT>& es)
+template< typename PointT=Eigen::Matrix<double, 3, 1>,
+          typename MatrixT=Eigen::Matrix<double, 3, 3> >
+visualization_msgs::Marker visualizePosition(const EllipsoidalSet<3, PointT, MatrixT>& es,
+                                             const PointT& scale = PointT::Ones())
 {
 	// NB: computeDirect for 2x2 or 3x3 matrices
 	Eigen::SelfAdjointEigenSolver<MatrixT> eigSolver;
@@ -58,22 +59,22 @@ visualization_msgs::Marker visualizePosition(const EllipsoidalSet<3, PointT, Mat
 	Eigen::Quaterniond q(eigSolver.eigenvectors());
 
 	visualization_msgs::Marker marker;
-	marker.header.frame_id = "base_link";
+	marker.header.frame_id = "World";
 	marker.header.stamp = ros::Time();
 	marker.ns = "position_belief";
 	marker.id = 0;
 	marker.type = visualization_msgs::Marker::SPHERE;
 	marker.action = visualization_msgs::Marker::ADD;
-	marker.pose.position.x = es.c[0];
-	marker.pose.position.y = es.c[1];
-	marker.pose.position.z = es.c[2];
+	marker.pose.position.x = es.c[0] * scale.x();
+	marker.pose.position.y = es.c[1] * scale.y();
+	marker.pose.position.z = es.c[2] * scale.z();
 	marker.pose.orientation.x = q.x();
 	marker.pose.orientation.y = q.y();
 	marker.pose.orientation.z = q.z();
 	marker.pose.orientation.w = q.w();
-	marker.scale.x = eigSolver.eigenvalues()[0];
-	marker.scale.y = eigSolver.eigenvalues()[1];
-	marker.scale.z = eigSolver.eigenvalues()[2];
+	marker.scale.x = eigSolver.eigenvalues()[0] * scale.x();
+	marker.scale.y = eigSolver.eigenvalues()[1] * scale.y();
+	marker.scale.z = eigSolver.eigenvalues()[2] * scale.z();
 	marker.color.a = 1.0; // Don't forget to set the alpha!
 	marker.color.r = 1.0;
 	marker.color.g = 1.0;

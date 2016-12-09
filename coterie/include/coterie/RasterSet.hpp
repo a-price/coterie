@@ -69,12 +69,14 @@ public:
 	static constexpr bool is_convex = false;
 	static constexpr unsigned int dimension = DIM;
 
+	typedef ::coterie::AABB<DIM> AABB;
 	typedef ::coterie::Axes<DIM> Axes;
 	typedef ::coterie::Bounds<DIM> Bounds;
 	typedef ::coterie::Index<DIM> Index;
 	typedef ::coterie::Shape<DIM> Shape;
 	typedef ::boost::multi_array_ref<bool,DIM> ArrayRef;
 
+	AABB coverage;
 	Axes axes;
 	Shape shape;
 	Bounds bounds;
@@ -86,6 +88,8 @@ public:
 	{
 		for (size_t d = 0; d < DIM; ++d)
 		{
+			coverage.min[d] = bounds[d].first;
+			coverage.max[d] = bounds[d].second;
 			axes[d].setLinSpaced(shape[d], bounds[d].first, bounds[d].second);
 		}
 	}
@@ -241,7 +245,7 @@ public:
 
 	virtual bool contains(const PointT& q) const override
 	{
-		return dataView(this->getCell(q));
+		return this->coverage.contains(q) && dataView(this->getCell(q));
 	}
 
 	virtual AABB<DIM, PointT> getAABB() const override
@@ -291,7 +295,7 @@ RasterSet<DIM, PointT>::RasterSet(const RasterSet::Shape& _shape, const RasterSe
 template<unsigned int DIM, typename PointT>
 bool RasterSet<DIM, PointT>::contains(const PointT& q) const
 {
-	return data(this->getCell(q));
+	return this->coverage.contains(q) && data(this->getCell(q));
 }
 
 template<unsigned int DIM, typename PointT>
