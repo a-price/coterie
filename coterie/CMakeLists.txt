@@ -40,6 +40,8 @@ find_package(Qhull REQUIRED)
 include_directories(SYSTEM ${QHULL_INCLUDE_DIR})
 link_libraries(${QHULL_LIBRARIES})
 
+catkin_python_setup()
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -95,10 +97,10 @@ add_custom_target(${PROJECT_NAME}_headers SOURCES ${IncludeFiles})
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(PROGRAMS
+  src/nodes/visualize_raster_isosurface.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS coterie coterie_node
