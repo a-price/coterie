@@ -107,6 +107,7 @@ visualization_msgs::Marker generateMarker(const size_t id)
 	}
 
 	m.mesh_resource = model;
+	m.frame_locked = true;
 
 	return m;
 }
