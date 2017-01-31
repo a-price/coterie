@@ -54,14 +54,14 @@ class Set
 {
 public:
 	typedef PointT point_type;
-	static constexpr bool is_convex = false;
+	static constexpr bool is_always_convex = false;
 	static constexpr unsigned int dimension = DIM;
 
 	typedef ::coterie::AABB<DIM, PointT> AABB;
 
 	virtual bool contains(const PointT& q) const = 0;
 	virtual AABB getAABB() const = 0;
-	virtual bool isConvex() const { return false; }
+	virtual bool isConvex() const { return is_always_convex; }
 };
 
 // TODO: Add generative set
@@ -71,7 +71,7 @@ class AABB : public Set<DIM, PointT>
 {
 public:
 	typedef PointT point_type;
-	static constexpr bool is_convex = true;
+	static constexpr bool is_always_convex = true;
 	static constexpr bool is_polyhedral = true;
 	static constexpr unsigned int dimension = DIM;
 
@@ -107,7 +107,7 @@ public:
 
 	virtual bool isConvex()
 	{
-		return true;
+		return is_always_convex;
 	}
 
 	bool isWellFormed() const

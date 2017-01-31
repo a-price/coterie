@@ -66,7 +66,7 @@ class PolytopeSet : public Set<DIM, PointT>
 public:
 	typedef PointT point_type;
 	typedef RosterT roster_type;
-	static constexpr bool is_convex = true;
+	static constexpr bool is_always_convex = true;
 	static constexpr bool is_polyhedral = true;
 	static constexpr unsigned int dimension = DIM;
 
@@ -99,7 +99,7 @@ public:
 		return supportPlanes.size() > 0;
 	}
 	virtual AABB<DIM, PointT> getAABB() const override { return supportPoints.getAABB(); }
-	virtual bool isConvex() const override { return is_convex; }
+	virtual bool isConvex() const override { return is_always_convex; }
 
 	const RosterT& getCorners() const { return supportPoints.members; }
 protected:

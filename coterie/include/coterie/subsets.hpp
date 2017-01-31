@@ -42,9 +42,31 @@
 #include "PointSet.hpp"
 #include "PolytopeSet.hpp"
 #include "RasterSet.hpp"
+#include "NonparametricSets.hpp"
 
 namespace coterie
 {
+
+template<unsigned int DIM,
+         typename PointT>
+bool contains(const UniversalSet<DIM, PointT>& /*outer*/, const Set<DIM, PointT>& /*inner*/)
+{
+	return true;
+}
+
+template<unsigned int DIM,
+         typename PointT>
+bool contains(const EmptySet<DIM, PointT>& /*outer*/, const Set<DIM, PointT>& /*inner*/)
+{
+	return false;
+}
+
+template<unsigned int DIM,
+         typename PointT>
+bool contains(const Set<DIM, PointT>& /*outer*/, const EmptySet<DIM, PointT>& /*inner*/)
+{
+	return true;
+}
 
 template<unsigned int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
@@ -116,7 +138,7 @@ bool contains(const RasterSet<DIM, PointT>& outer, const EllipsoidalSet<DIM, Poi
 
 template<class OuterT,
          class InnerT>
-typename std::enable_if<OuterT::is_convex && InnerT::is_convex && InnerT::is_polyhedral &&
+typename std::enable_if<OuterT::is_always_convex && InnerT::is_always_convex && InnerT::is_polyhedral &&
                         std::is_convertible<typename InnerT::point_type, typename OuterT::point_type>::value &&
                         OuterT::dimension == InnerT::dimension,
 bool>::type contains(const OuterT& outer, const InnerT& inner)

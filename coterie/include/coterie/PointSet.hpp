@@ -91,12 +91,13 @@ class PointSet : public Set<DIM, PointT>
 public:
 	typedef PointT point_type;
 	typedef RosterT roster_type;
-	static constexpr bool is_convex = false;
+	static constexpr bool is_always_convex = false;
 	static constexpr unsigned int dimension = DIM;
 
 	RosterT members;
 	virtual bool contains(const PointT& q) const override { return ::coterie::contains(members, q); }
 	virtual AABB<DIM, PointT> getAABB() const override;
+	virtual bool isConvex() const override { return (members.size() <= 1); }
 };
 
 template<unsigned int DIM,

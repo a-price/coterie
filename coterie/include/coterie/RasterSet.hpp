@@ -66,7 +66,7 @@ class RasterSetBase : public Set<DIM, PointT>
 {
 public:
 	typedef PointT point_type;
-	static constexpr bool is_convex = false;
+	static constexpr bool is_always_convex = false;
 	static constexpr unsigned int dimension = DIM;
 
 	typedef ::coterie::AABB<DIM> AABB;
@@ -164,7 +164,7 @@ class RasterSet : public RasterSetBase<DIM, PointT>
 {
 public:
 	typedef PointT point_type;
-	static constexpr bool is_convex = false;
+	static constexpr bool is_always_convex = false;
 	static constexpr unsigned int dimension = DIM;
 
 	typedef RasterSetBase<DIM, PointT> Base;
@@ -219,7 +219,7 @@ class RasterSetView : public RasterSetBase<DIM, PointT>
 {
 public:
 	typedef PointT point_type;
-	static constexpr bool is_convex = false;
+	static constexpr bool is_always_convex = false;
 	static constexpr unsigned int dimension = DIM;
 
 	typedef RasterSetBase<DIM, PointT> Base;

@@ -54,7 +54,7 @@ class EllipsoidalSet : public Set<DIM, PointT>
 public:
 	typedef PointT point_type;
 	typedef MatrixT matrix_type;
-	static constexpr bool is_convex = true;
+	static constexpr bool is_always_convex = true;
 	static constexpr unsigned int dimension = DIM;
 
 	PointT c;
