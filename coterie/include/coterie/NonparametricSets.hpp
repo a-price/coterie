@@ -74,7 +74,7 @@ public:
 };
 
 template<unsigned int DIM, typename PointT>
-UniversalSet<DIM,PointT>::AABB UniversalSet<DIM,PointT>::getAABB() const override
+typename UniversalSet<DIM,PointT>::AABB UniversalSet<DIM,PointT>::getAABB() const
 {
 	return AABB{-PointT::Ones()*std::numeric_limits<double>::infinity(), PointT::Ones()*std::numeric_limits<double>::infinity()};
 }

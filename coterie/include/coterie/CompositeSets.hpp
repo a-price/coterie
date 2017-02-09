@@ -109,7 +109,7 @@ bool UnionSet<DIM,PointT>::contains(const PointT& q) const
 }
 
 template<unsigned int DIM, typename PointT>
-UnionSet<DIM,PointT>::AABB UnionSet::getAABB() const
+typename UnionSet<DIM,PointT>::AABB UnionSet::getAABB() const
 {
 	throw std::logic_error("Function not yet implemented.");
 }
@@ -132,7 +132,7 @@ bool IntersectionSet<DIM,PointT>::contains(const PointT& q) const
 }
 
 template<unsigned int DIM, typename PointT>
-IntersectionSet<DIM,PointT>::AABB IntersectionSet::getAABB() const
+typename IntersectionSet<DIM,PointT>::AABB IntersectionSet::getAABB() const
 {
 	throw std::logic_error("Function not yet implemented.");
 }
