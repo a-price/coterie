@@ -75,7 +75,7 @@ public:
 	std::vector<Hyperplane, Eigen::aligned_allocator<Hyperplane> > supportPlanes;
 
 
-	PolytopeSet(const PointSet<DIM, PointT>& inputSet)
+	PolytopeSet(const PointSet<DIM, PointT, RosterT>& inputSet)
 	{
 		bool succeeded = qhull(inputSet);
 		if (!succeeded)

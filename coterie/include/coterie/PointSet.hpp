@@ -49,11 +49,12 @@
 namespace coterie
 {
 
-template<unsigned int DIM>
+template<unsigned int DIM,
+         typename PointT=Eigen::Matrix<double, DIM, 1>>
 struct vector_less_than
 {
-	bool operator()(const Eigen::Matrix<double, DIM, 1>& a,
-	                const Eigen::Matrix<double, DIM, 1>& b) const
+	bool operator()(const PointT& a,
+	                const PointT& b) const
 	{
 		for(size_t i=0; i<DIM; ++i)
 		{
