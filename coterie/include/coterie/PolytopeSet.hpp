@@ -211,7 +211,7 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 		{
 			newSupport[j] = vertex->point[j];
 		}
-		supportPoints.members.insert(newSupport);
+		supportPoints.insert(newSupport);
 	}
 
 	// Deallocates memory (also the points)

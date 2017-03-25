@@ -71,16 +71,28 @@ inline auto contains_impl(const C& c, const T& x, int)
 { return std::end(c) != c.find(x); }
 
 template<class C, class T>
-inline bool contains_impl(const C& v, const T& x, long)
+inline bool contains_impl(const C& v, const T& x, ...)
 //{ return std::end(v) != std::find(std::begin(v), std::end(v), x); }
 { return v.end() != std::find(v.begin(), v.end(), x); }
 
 template<class C, class T>
 auto contains(const C& c, const T& x)
 -> decltype(std::end(c), true)
-{ return contains_impl(c, x, 0); }    // 0 prefers int to long
+{ return contains_impl(c, x, 0); }    // 0 prefers int to ...
 
 
+template <class C, class V>
+auto append_impl(C& container, V&& value, int)
+-> decltype(container.push_back(std::forward<V>(value)), void())
+{ container.push_back(std::forward<V>(value));}
+
+template <class C, class V>
+void append_impl(C& container, V&& value, ...)
+{ container.insert(std::forward<V>(value)); }
+
+template <class C, class V>
+void append(C& container, V&& value)
+{ append_impl(container, std::forward<V>(value), 0); }
 
 
 //         template typename RosterT=std::set<typename> >
@@ -99,6 +111,8 @@ public:
 	virtual bool contains(const PointT& q) const override { return ::coterie::contains(members, q); }
 	virtual AABB<DIM, PointT> getAABB() const override;
 	virtual bool isConvex() const override { return (members.size() <= 1); }
+
+	virtual void insert(const PointT& p) { ::coterie::append(members, p); }
 };
 
 template<unsigned int DIM,

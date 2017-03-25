@@ -37,28 +37,59 @@
 
 #include "coterie/PointSet.hpp"
 
+#include <list>
+
 #include <gtest/gtest.h>
 
-TEST(PointSet, testContains)
+template <typename PS>
+void testMembership(PS ps)
 {
-	coterie::PointSet<2> ps;
-
-	ps.members.insert({0,0});
-	ps.members.insert({0,1.5});
-	ps.members.insert({-1,12});
-	ps.members.insert({-5,-2});
-	ps.members.insert({3,6});
-	ps.members.insert({3.14159,2.71828});
+	ps.insert({0,0});
+	ps.insert({0,1.5});
+	ps.insert({-1,12});
+	ps.insert({-5,-2});
+	ps.insert({3,6});
+	ps.insert({3.14159,2.71828});
 
 	ASSERT_TRUE(ps.contains({0,0}));
 	ASSERT_TRUE(ps.contains({3.14159,2.71828}));
 	ASSERT_FALSE(ps.contains({1,1}));
 
 	coterie::AABB<2> aabb = ps.getAABB();
-	for (const coterie::PointSet<2>::point_type& p : ps.members)
+	for (const typename PS::point_type& p : ps.members)
 	{
 		ASSERT_TRUE(aabb.contains(p));
 	}
+}
+
+TEST(PointSet, testContainsSet)
+{
+	coterie::PointSet<2> ps;
+
+	testMembership(ps);
+
+	// Verify direct member insert
+	ps.members.insert({-1, -1});
+}
+
+TEST(PointSet, testContainsVector)
+{
+	coterie::PointSet<2, Eigen::Vector2d, std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d>>> ps;
+
+	testMembership(ps);
+
+	// Verify direct member insert
+	ps.members.push_back({-1, -1});
+}
+
+TEST(PointSet, testContainsList)
+{
+	coterie::PointSet<2, Eigen::Vector2d, std::list<Eigen::Vector2d>> ps;
+
+	testMembership(ps);
+
+	// Verify direct member insert
+	ps.members.push_back({-1, -1});
 }
 
 
