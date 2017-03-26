@@ -98,6 +98,7 @@ TEST(RasterSet, testContains)
 			ASSERT_TRUE(aabb.contains(rs.getState(idx)));
 			ASSERT_TRUE(rs.contains(rs.getState(rs.getCell(rs.getState(idx)))));
 		}
+		ASSERT_EQ(idx, rs.getCell(rs.getState(idx)));
 	}
 }
 
@@ -126,12 +127,29 @@ TEST(RasterSet, testView)
 	rs.data(index) = true;
 
 	coterie::RasterSetView<N> view = rs.getView(rs.getAABB());
-	ASSERT_EQ(1, view.dataView.size());
+	ASSERT_EQ(1, view.dataView.num_elements());
 	for (size_t d = 0; d < N; ++d)
 	{
-		ASSERT_EQ(0.0, view.bounds[d].second - view.bounds[d].first);
+		ASSERT_NEAR(0.4, view.bounds[d].second - view.bounds[d].first, 1e-9);
 		ASSERT_EQ(1, view.axes[d].size());
 	}
+
+	rs.data(index) = false;
+
+	rs.data(coterie::RasterSet<N>::Index{0, 0}) = true;
+	rs.data(coterie::RasterSet<N>::Index{1, 1}) = true;
+
+	coterie::RasterSetView<N> view2 = rs.getView(rs.getAABB());
+	ASSERT_EQ(4, view2.dataView.num_elements());
+
+	rs.data(coterie::RasterSet<N>::Index{4, 4}) = true;
+	coterie::RasterSetView<N> view3 = rs.getView(rs.getAABB());
+	ASSERT_EQ(shape[0]*shape[1], view3.dataView.num_elements());
+	for (size_t d = 0; d < N; ++d)
+	{
+		ASSERT_NEAR(0.0, (view3.axes[d] - rs.axes[d]).squaredNorm(), 1e-9);
+	}
+
 //	rs.data[rs.getCell()]
 }
 

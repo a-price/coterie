@@ -115,6 +115,25 @@ TEST(SubsetRelations, testEllipsoidInRaster)
 		rs.data(idx) = es.contains(pt);
 	}
 
+	coterie::AABB<N> aabb = es.getAABB();
+	coterie::AABB<N> aabb2 = rs.getAABB();
+	ASSERT_LT((aabb.min-aabb2.min).squaredNorm(), 1e-6);
+	ASSERT_LT((aabb.max-aabb2.max).squaredNorm(), 1e-6);
+
+	coterie::RasterSetView<N> view = rs.getView(aabb);
+	for (size_t i = 0; i < nElements; ++i)
+	{
+		coterie::RasterSet<N>::Index r_idx = rs.getCell(i);
+		coterie::RasterSet<N>::Index v_idx = view.getCell(i);
+		ASSERT_EQ(r_idx, v_idx);
+		coterie::RasterSet<N>::point_type r_pt = rs.getState(r_idx);
+		coterie::RasterSet<N>::point_type v_pt = view.getState(v_idx);
+		ASSERT_TRUE(r_pt == v_pt); // Expect exactly equal
+		ASSERT_EQ(rs.data(r_idx), es.contains(r_pt));
+		ASSERT_EQ(view.dataView(v_idx), es.contains(v_pt));
+	}
+
+
 	ASSERT_TRUE(contains(rs, es));
 	ASSERT_TRUE(contains(rs.getAABB(), es));
 

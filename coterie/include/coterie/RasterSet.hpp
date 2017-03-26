@@ -88,9 +88,11 @@ public:
 	{
 		for (size_t d = 0; d < DIM; ++d)
 		{
+			assert(bounds[d].first <= bounds[d].second);
 			coverage.min[d] = bounds[d].first;
 			coverage.max[d] = bounds[d].second;
-			axes[d].setLinSpaced(shape[d], bounds[d].first, bounds[d].second);
+			double cellWidth = (bounds[d].second-bounds[d].first)/static_cast<double>(shape[d]);
+			axes[d].setLinSpaced(shape[d], bounds[d].first+cellWidth/2.0, bounds[d].second-cellWidth/2.0);
 		}
 	}
 
@@ -148,6 +150,16 @@ AABB<DIM, PointT> getActiveAABB(const RasterSetBase<DIM, PointT>& rsb, const Sto
 		aabb.min = rsb.getState(minIdx);
 		aabb.max = rsb.getState(maxIdx);
 	}
+
+	// getState() returns points at the center of the grid cells.
+	// We need to extend the AABB to the edge of the cells
+	for (size_t d = 0; d < DIM; ++d)
+	{
+		double cellWidth = (rsb.bounds[d].second-rsb.bounds[d].first)/static_cast<double>(rsb.shape[d]);
+		aabb.min[d] -= cellWidth/2.0;
+		aabb.max[d] += cellWidth/2.0;
+	}
+
 	return aabb;
 }
 
@@ -237,7 +249,7 @@ public:
 	View dataView;
 
 	RasterSetView(const RasterSet<DIM, PointT>& rasterSet, const Ranges& ranges)
-	    : RasterSetBase<DIM, PointT>(rangesToShape(ranges), rangesToBounds(ranges, rasterSet.axes)),
+	    : RasterSetBase<DIM, PointT>(rangesToShape(ranges), rangesToBounds(ranges, rasterSet.axes, rasterSet.bounds)),
 	      dataView(rasterSet.data[IndicesBuilder<Ranges, DIM>::build(ranges)])
 	{
 
@@ -264,13 +276,14 @@ public:
 		return shape;
 	}
 
-	static Bounds rangesToBounds(const Ranges& ranges, const Axes& axes)
+	static Bounds rangesToBounds(const Ranges& ranges, const Axes& axes, const Bounds& bounds)
 	{
 		Bounds newBounds;
 		for (size_t d = 0; d < DIM; ++d)
 		{
+			double cellWidth = (bounds[d].second-bounds[d].first)/static_cast<double>(axes[d].size());
 			const Range& r = ranges[d];
-			newBounds[d] = {axes[d][r.start()], axes[d][r.finish()-1]};
+			newBounds[d] = {axes[d][r.start()]-cellWidth/2.0, axes[d][r.finish()-1]+cellWidth/2.0};
 		}
 		return newBounds;
 	}
@@ -318,10 +331,19 @@ typename RasterSetBase<DIM, PointT>::Index RasterSetBase<DIM, PointT>::getCell(c
 	Index idx;
 	for (size_t d = 0; d < DIM; ++d)
 	{
-		assert(point[d] >= this->bounds[d].first);
-		assert(point[d] <= this->bounds[d].second);
-		idx[d] = static_cast<int>(static_cast<double>(this->shape[d]-1)
-		                          * (point[d]-this->bounds[d].first)/(this->bounds[d].second-this->bounds[d].first));
+		assert(point[d] >= bounds[d].first);
+		assert(point[d] <= bounds[d].second);
+
+		// Cell boundaries are [x). The upper bound is added to the last cell
+		if (bounds[d].second == point[d])
+		{
+			idx[d] = shape[d]-1;
+		}
+		else
+		{
+			idx[d] = static_cast<int>(static_cast<double>(shape[d])
+			                          * (point[d]-bounds[d].first)/(bounds[d].second-bounds[d].first));
+		}
 	}
 	return idx;
 }
@@ -370,8 +392,15 @@ RasterSetView<DIM, PointT, true> RasterSet<DIM, PointT>::getView(const AABB<DIM,
 	}
 	else
 	{
-		Index minIdx = this->getCell(aabb.min);
-		Index maxIdx = this->getCell(aabb.max);
+		// Slightly reduce the bounding box to not land on the edge of the grid
+		PointT epsilon;
+		for (size_t d = 0; d < DIM; ++d)
+		{
+			double cellWidth = (this->bounds[d].second-this->bounds[d].first)/static_cast<double>(this->shape[d]);
+			epsilon[d] = cellWidth/100.0;
+		}
+		Index minIdx = this->getCell(aabb.min+epsilon);
+		Index maxIdx = this->getCell(aabb.max-epsilon);
 		for (size_t d = 0; d < DIM; ++d)
 		{
 			ranges[d] = typename RasterSetView<DIM, PointT>::Range(minIdx[d], maxIdx[d]+1);

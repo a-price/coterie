@@ -132,6 +132,7 @@ enable_testing()
 
 if(CATKIN_ENABLE_TESTING)
 #  find_package(rostest REQUIRED)
+  find_package( Threads )
 
   # Add all unit tests
   file(GLOB UTestFiles "test/unit/*.cpp")
@@ -144,6 +145,7 @@ if(CATKIN_ENABLE_TESTING)
       ${PROJECT_NAME}
       ${catkin_LIBRARIES}
       ${GTEST_LIBRARIES}
+      ${CMAKE_THREAD_LIBS_INIT}
     )
   endforeach()
 
