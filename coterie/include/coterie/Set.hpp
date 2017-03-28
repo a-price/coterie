@@ -148,6 +148,50 @@ public:
 		}
 		return corners;
 	}
+
+	/**
+	 * @brief addPoint
+	 * @param q
+	 * @return true if point grew the bounding box
+	 */
+	bool addPoint(const PointT &q)
+	{
+		bool isInside = true;
+		for (size_t d=0; d<DIM; ++d)
+		{
+			if (q[d] < min[d])
+			{
+				isInside = false;
+				min[d] = q[d];
+			}
+			if (q[d] > max[d])
+			{
+				isInside = false;
+				max[d] = q[d];
+			}
+		}
+		return false;
+	}
+
+	PointT getCenter() const
+	{
+		PointT c;
+		for (size_t d = 0; d < DIM; ++d)
+		{
+			c[d] = (max[d] + min[d])/2.0;
+		}
+		return c;
+	}
+
+	PointT getDimensions() const
+	{
+		PointT c;
+		for (size_t d = 0; d < DIM; ++d)
+		{
+			c[d] = (max[d] - min[d]);
+		}
+		return c;
+	}
 };
 
 template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
