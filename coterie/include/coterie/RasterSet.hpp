@@ -59,6 +59,9 @@ using Index = boost::array<long int, DIM>;
 template<unsigned int DIM>
 using Shape = boost::array<size_t, DIM>;
 
+template<unsigned int DIM, typename PointT>
+Index<DIM> getCellFromPoint(const PointT& point, const Shape<DIM>& shape, const Bounds<DIM>& bounds);
+
 
 template<unsigned int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1> >
@@ -328,24 +331,7 @@ PointT RasterSetBase<DIM, PointT>::getState(const Index& idx) const
 template<unsigned int DIM, typename PointT>
 typename RasterSetBase<DIM, PointT>::Index RasterSetBase<DIM, PointT>::getCell(const PointT& point) const
 {
-	Index idx;
-	for (size_t d = 0; d < DIM; ++d)
-	{
-		assert(point[d] >= bounds[d].first);
-		assert(point[d] <= bounds[d].second);
-
-		// Cell boundaries are [x). The upper bound is added to the last cell
-		if (bounds[d].second == point[d])
-		{
-			idx[d] = shape[d]-1;
-		}
-		else
-		{
-			idx[d] = static_cast<int>(static_cast<double>(shape[d])
-			                          * (point[d]-bounds[d].first)/(bounds[d].second-bounds[d].first));
-		}
-	}
-	return idx;
+	return getCellFromPoint<DIM, PointT>(point, this->shape, this->bounds);
 }
 
 // (shape)[index]
@@ -407,6 +393,29 @@ RasterSetView<DIM, PointT, true> RasterSet<DIM, PointT>::getView(const AABB<DIM,
 		}
 	}
 	return RasterSetView<DIM, PointT, true>(*this, ranges);
+}
+
+template<unsigned int DIM, typename PointT>
+Index<DIM> getCellFromPoint(const PointT& point, const Shape<DIM>& shape, const Bounds<DIM>& bounds)
+{
+	Index<DIM> idx;
+	for (size_t d = 0; d < DIM; ++d)
+	{
+		assert(point[d] >= bounds[d].first);
+		assert(point[d] <= bounds[d].second);
+
+		// Cell boundaries are [x). The upper bound is added to the last cell
+		if (bounds[d].second == point[d])
+		{
+			idx[d] = shape[d]-1;
+		}
+		else
+		{
+			idx[d] = static_cast<int>(static_cast<double>(shape[d])
+			                          * (point[d]-bounds[d].first)/(bounds[d].second-bounds[d].first));
+		}
+	}
+	return idx;
 }
 
 }
