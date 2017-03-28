@@ -171,6 +171,23 @@ TEST(RasterSet, testIteration)
 	}
 }
 
+TEST(RasterSet, testSensitivity)
+{
+	const int N = 2;
+	coterie::RasterSet<N>::Shape shape{5,5};
+	coterie::RasterSet<N>::Bounds bounds{{{-1,1},{-1,1}}};
+	coterie::RasterSet<N> rs(shape, bounds);
+
+	coterie::Index<N> idx = {2, 2};
+
+	Eigen::Vector2d s = rs.getState(idx);
+	ASSERT_EQ(idx, rs.getCell(s));
+	ASSERT_EQ(idx, rs.getCell(s + Eigen::Vector2d(0, 1e-6)));
+	ASSERT_EQ(idx, rs.getCell(s - Eigen::Vector2d(0, 1e-6)));
+	ASSERT_EQ(idx, rs.getCell(s + Eigen::Vector2d(1e-6, 0)));
+	ASSERT_EQ(idx, rs.getCell(s - Eigen::Vector2d(1e-6, 0)));
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
