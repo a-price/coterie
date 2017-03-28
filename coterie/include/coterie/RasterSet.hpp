@@ -404,15 +404,18 @@ Index<DIM> getCellFromPoint(const PointT& point, const Shape<DIM>& shape, const 
 		assert(point[d] >= bounds[d].first);
 		assert(point[d] <= bounds[d].second);
 
-		// Cell boundaries are [x). The upper bound is added to the last cell
-		if (bounds[d].second == point[d])
+		double len = bounds[d].second-bounds[d].first;
+		double cellWidth = len/static_cast<double>(shape[d]);
+
+		// Cell boundaries are [x)[x)[x)... . The upper bound is added to the last cell
+		if (point[d] > bounds[d].second-(cellWidth/2.0))
 		{
 			idx[d] = shape[d]-1;
 		}
 		else
 		{
 			idx[d] = static_cast<int>(static_cast<double>(shape[d])
-			                          * (point[d]-bounds[d].first)/(bounds[d].second-bounds[d].first));
+			                          * (point[d]-bounds[d].first)/(len));
 		}
 	}
 	return idx;
