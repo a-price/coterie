@@ -35,8 +35,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SERIALIZATION_HPP
-#define SERIALIZATION_HPP
+#ifndef SERIALIZE_RASTERSETMSG_HPP
+#define SERIALIZE_RASTERSETMSG_HPP
 
 #include <coterie/RasterSet.hpp>
 #include <coterie_msgs/RasterSet.h>
@@ -114,4 +114,4 @@ void deserialize(const coterie_msgs::RasterSet& msg, RasterSet<DIM>& set)
 }
 }
 
-#endif // SERIALIZATION_HPP
+#endif // SERIALIZE_RASTERSETMSG_HPP

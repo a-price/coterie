@@ -210,22 +210,23 @@ public:
 };
 
 // Helper functor to build indices.
-template<typename RangeArrayType, size_t Dimension>
+// IndexStemType is e.g. boost::indices or boost::extents
+template<typename RangeArrayType, typename IndexGenType, size_t Dimension>
 struct IndicesBuilder {
    // Recursively invoke the functor for the next lowest dimension and
    // add the next range.
-   static auto build(const RangeArrayType& range)
-      -> decltype(IndicesBuilder<RangeArrayType, Dimension - 1>::build(range)[range[Dimension - 1]]) {
-      return IndicesBuilder<RangeArrayType, Dimension - 1>::build(range)[range[Dimension - 1]];
+   static auto build(const RangeArrayType& range, IndexGenType& gen)
+      -> decltype(IndicesBuilder<RangeArrayType, IndexGenType, Dimension - 1>::build(range, gen)[range[Dimension - 1]]) {
+      return IndicesBuilder<RangeArrayType, IndexGenType, Dimension - 1>::build(range, gen)[range[Dimension - 1]];
    }
 };
 
 // Helper functor specialization to terminate recursion.
-template<typename RangeArrayType>
-struct IndicesBuilder<RangeArrayType, 1> {
-   static auto build(const RangeArrayType& range)
-      -> decltype(boost::indices[range[0]]) {
-      return boost::indices[range[0]];
+template<typename RangeArrayType, typename IndexGenType>
+struct IndicesBuilder<RangeArrayType, IndexGenType, 1> {
+   static auto build(const RangeArrayType& range, IndexGenType& gen)
+      -> decltype(gen[range[0]]) {
+      return gen[range[0]];
    }
 };
 
@@ -253,7 +254,7 @@ public:
 
 	RasterSetView(const RasterSet<DIM, PointT>& rasterSet, const Ranges& ranges)
 	    : RasterSetBase<DIM, PointT>(rangesToShape(ranges), rangesToBounds(ranges, rasterSet.axes, rasterSet.bounds)),
-	      dataView(rasterSet.data[IndicesBuilder<Ranges, DIM>::build(ranges)])
+	      dataView(rasterSet.data[IndicesBuilder<Ranges, boost::multi_array_types::index_gen, DIM>::build(ranges, boost::indices)])
 	{
 
 	}

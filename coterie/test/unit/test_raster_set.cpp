@@ -36,38 +36,10 @@
  */
 
 #include "coterie/RasterSet.hpp"
+#include <coterie/RandomIndexGenerator.hpp>
 
 #include <random>
 #include <gtest/gtest.h>
-
-template <unsigned N>
-class RandomIndexGenerator
-{
-public:
-	RandomIndexGenerator(const coterie::Shape<N>& s)
-	{
-		rng = std::mt19937(rd());
-
-		for (size_t i = 0; i < N; ++i)
-		{
-			generators[i] = std::uniform_int_distribution<int>(0, s[i]-1);
-		}
-	}
-
-	coterie::Index<N> getIndex()
-	{
-		coterie::Index<N> idx;
-		for (size_t i = 0; i < N; ++i)
-		{
-			idx[i] = generators[i](rng);
-		}
-		return idx;
-	}
-
-	std::random_device rd;
-	std::mt19937 rng;
-	std::array<std::uniform_int_distribution<int>, N> generators;
-};
 
 TEST(RasterSet, testContains)
 {
@@ -76,7 +48,7 @@ TEST(RasterSet, testContains)
 	coterie::RasterSet<N>::Bounds bounds{{{-1,1},{-1,1}}};
 	coterie::RasterSet<N> rs(shape, bounds);
 
-	RandomIndexGenerator<N> rig(shape);
+	coterie::RandomIndexGenerator<N> rig(shape);
 	for (int rep = 0; rep < 5; ++rep)
 	{
 		coterie::RasterSet<N>::Index index = rig.getIndex();
@@ -122,7 +94,7 @@ TEST(RasterSet, testView)
 	coterie::RasterSet<N>::Bounds bounds{{{-1,1},{-1,1}}};
 	coterie::RasterSet<N> rs(shape, bounds);
 
-	RandomIndexGenerator<N> rig(shape);
+	coterie::RandomIndexGenerator<N> rig(shape);
 	coterie::RasterSet<N>::Index index = rig.getIndex();
 	rs.data(index) = true;
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(coterie)
 
-set(BUILD_FLAGS "-std=c++0x -Wshadow -Wall -Wextra -Wpedantic")
+set(BUILD_FLAGS "-std=c++11 -Wshadow -Wall -Wextra -Wpedantic")
 if(NOT CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE RelWithDebInfo ... FORCE)
    message(STATUS "Setting CMAKE_BUILD_TYPE to ${CMAKE_BUILD_TYPE} (default).")
@@ -31,6 +31,13 @@ find_package(catkin REQUIRED COMPONENTS
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
+find_package(Boost REQUIRED COMPONENTS
+  filesystem
+  iostreams
+  serialization
+  system
+)
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_package(Eigen REQUIRED)
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
@@ -70,6 +77,7 @@ include_directories(include)
 add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/template_instantiations.cpp
 )
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
