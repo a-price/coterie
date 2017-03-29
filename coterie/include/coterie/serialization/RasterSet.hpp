@@ -39,6 +39,9 @@
 #define SERIALIZE_RASTERSET_HPP
 
 #include <coterie/RasterSet.hpp>
+#include <coterie/serialization/AABB.hpp>
+#include <coterie/serialization/Array.hpp>
+#include <coterie/serialization/Eigen.hpp>
 
 #include <boost/multi_array.hpp>
 #include <boost/serialization/array.hpp>
