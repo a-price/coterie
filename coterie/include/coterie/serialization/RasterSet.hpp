@@ -58,18 +58,17 @@ inline void load(Archive & ar,
                  boost::multi_array<T, NumDims, Allocator> & t,
                  const unsigned int /*version*/)
 {
-	const unsigned int DIM = 2;
-	typedef boost::multi_array<T,DIM> multi_array_;
+	typedef boost::multi_array<T,NumDims> multi_array_;
 	typedef typename multi_array_::size_type size_;
 
-	std::array<size_, DIM> shape;
-	for (unsigned int d = 0; d < DIM; ++d)
+	std::array<size_, NumDims> shape;
+	for (unsigned int d = 0; d < NumDims; ++d)
 	{
 		std::string name = "dim" + std::to_string(d);
 		ar >> boost::serialization::make_nvp(name.c_str(), shape[d]);
 	}
 
-	t.resize(coterie::IndicesBuilder<std::array<size_, DIM>, boost::multi_array_types::extent_gen, DIM>::build(shape, boost::extents));
+	t.resize(coterie::IndicesBuilder<std::array<size_, NumDims>, boost::multi_array_types::extent_gen, NumDims>::build(shape, boost::extents));
 	ar >> boost::serialization::make_array(t.data(), t.num_elements());
 }
 
@@ -78,11 +77,10 @@ inline void save(Archive & ar,
                  const boost::multi_array<T, NumDims, Allocator> & t,
                  const unsigned int /*version*/)
 {
-	const unsigned int DIM = 2;
-	typedef boost::multi_array<T,DIM> multi_array_;
+	typedef boost::multi_array<T,NumDims> multi_array_;
 	typedef typename multi_array_::size_type size_;
 
-	for (unsigned int d = 0; d < DIM; ++d)
+	for (unsigned int d = 0; d < NumDims; ++d)
 	{
 		std::string name = "dim" + std::to_string(d);
 		size_ n = (t.shape()[d]);
