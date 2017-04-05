@@ -39,9 +39,18 @@ find_package(Boost REQUIRED COMPONENTS
 )
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-find_package(Eigen REQUIRED)
-include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
-add_definitions(${EIGEN_DEFINITIONS})
+find_package(Eigen3)
+if(NOT EIGEN3_FOUND)
+  # Fallback to cmake_modules
+  find_package(cmake_modules REQUIRED)
+  find_package(Eigen REQUIRED)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
+  set(EIGEN3_DEFINITIONS ${EIGEN_DEFINITIONS})
+else()
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+endif()
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
+add_definitions(${EIGEN3_DEFINITIONS})
 
 find_package(Qhull REQUIRED)
 include_directories(SYSTEM ${QHULL_INCLUDE_DIR})
@@ -59,7 +68,7 @@ catkin_python_setup()
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
+ INCLUDE_DIRS include ${EIGEN3_INCLUDE_DIRS}
  LIBRARIES ${PROJECT_NAME} ${QHULL_LIBRARIES}
  CATKIN_DEPENDS cmake_modules roscpp roslib std_msgs visualization_msgs
 #  DEPENDS system_lib

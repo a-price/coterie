@@ -59,13 +59,14 @@ inline void serialize(Archive & ar,
 		Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols> & t,
 		const unsigned int)
 {
-	size_t rows = t.rows(), cols = t.cols();
+	typedef typename Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>::Index Index;
+	Index rows = t.rows(), cols = t.cols();
 	ar & rows;
 	ar & cols;
 	if (rows * cols != t.size())
 		t.resize(rows, cols);
 
-	for (size_t i = 0; i < t.size(); i++)
+	for (Index i = 0; i < t.size(); i++)
 		ar & t.data()[i];
 }
 

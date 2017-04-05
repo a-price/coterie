@@ -41,6 +41,8 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/utility.hpp>
 
+#ifdef BOOST_NO_CXX11_HDR_ARRAY
+
 namespace boost
 {
 namespace serialization
@@ -57,5 +59,7 @@ void serialize(Archive& ar, std::array<T,N>& a, const unsigned int /* version */
 
 } // namespace serialization
 } // namespace boost
+
+#endif // BOOST_NO_CXX11_HDR_ARRAY
 
 #endif // SERIALIZE_ARRAY_HPP
