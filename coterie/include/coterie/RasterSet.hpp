@@ -325,7 +325,7 @@ template<unsigned int DIM, typename PointT>
 PointT RasterSetBase<DIM, PointT>::getState(const Index& idx) const
 {
 	PointT x;
-	for (size_t d = 0; d < DIM; ++d) { x[d] = this->axes[d][idx[d]]; }
+	for (unsigned d = 0; d < DIM; ++d) { x[d] = this->axes[d][idx[d]]; }
 	return x;
 }
 
@@ -360,7 +360,7 @@ typename RasterSetBase<DIM, PointT>::Index RasterSetBase<DIM, PointT>::getCell(s
 		mul /= this->shape[i];
 		coeffs.push_back(mul);
 		res[i] = index / mul;
-		assert(res[i] < this->shape[i]);
+		assert(res[i] < static_cast<typename Index::value_type>(this->shape[i]));
 		index -= res[i] * mul;
 	}
 	return res;

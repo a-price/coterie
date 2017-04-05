@@ -194,7 +194,7 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 		assert(facet->normal);
 		Hyperplane h;
 		h.distance = -facet->offset;
-		for (int i = 0; i < DIM; ++i)
+		for (unsigned i = 0; i < DIM; ++i)
 		{
 			h.normal[i] = facet->normal[i];
 		}
