@@ -40,8 +40,13 @@
 
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/utility.hpp>
+#include <boost/version.hpp>
 
-#ifdef BOOST_NO_CXX11_HDR_ARRAY
+const int BOOST_MAJOR_VERSION = BOOST_VERSION / 100000;
+const int BOOST_MINOR_VERSION = BOOST_VERSION / 100 % 1000;
+const int BOOST_PATCH_VERSION = BOOST_VERSION % 100;
+
+#if (BOOST_MAJOR_VERSION <= 1 && BOOST_MINOR_VERSION < 56) || BOOST_NO_CXX11_HDR_ARRAY
 
 namespace boost
 {

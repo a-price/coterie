@@ -73,13 +73,13 @@ TEST(fileio, testCompression)
 	fs::path temp_dir = fs::temp_directory_path();
 	fs::path temp_file = temp_dir / fs::path("test_set.data");
 
-	const int N = 2;
-	coterie::RasterSet<N>::Shape shape{25,25};
-	coterie::RasterSet<N>::Bounds bounds{{{-1,1},{-1,1}}};
+	const int N = 3;
+	coterie::RasterSet<N>::Shape shape{25,25,5};
+	coterie::RasterSet<N>::Bounds bounds{{{-1,1},{-1,1},{-1,1}}};
 	coterie::RasterSet<N> rs(shape, bounds);
 
 	coterie::RandomIndexGenerator<N> rig(shape);
-	for (int rep = 0; rep < 5; ++rep)
+	for (int rep = 0; rep < 15; ++rep)
 	{
 		coterie::RasterSet<N>::Index index = rig.getIndex();
 		for (size_t i = 0; i < N; ++i)
@@ -90,7 +90,7 @@ TEST(fileio, testCompression)
 		rs.data(index) = true;
 	}
 	coterie::saveGZFile(rs, temp_file.c_str());
-	coterie::RasterSet<N> rs2(shape, bounds);
+	coterie::RasterSet<N> rs2(coterie::Shape<3>{1, 1, 1}, coterie::Bounds<3>{{{-1,1},{-1,1},{-1,1}}});
 	coterie::loadGZFile(rs2, temp_file.c_str());
 
 	ASSERT_EQ(rs.num_elements(), rs2.num_elements());
@@ -99,7 +99,7 @@ TEST(fileio, testCompression)
 	for (size_t i = 0; i < nElements; ++i)
 	{
 		coterie::RasterSet<N>::Index idx = rs.getCell(i);
-		ASSERT_EQ(rs.data(idx), rs2.data(idx));
+		ASSERT_EQ(rs(idx), rs2(idx));
 	}
 }
 
