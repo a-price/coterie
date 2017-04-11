@@ -52,9 +52,13 @@ namespace coterie
  */
 template<unsigned int OLD_DIM, unsigned int NEW_DIM,
          typename PointT=Eigen::Matrix<double, OLD_DIM, 1>,
-         typename RosterT=std::set<Eigen::Matrix<double, OLD_DIM, 1>, vector_less_than<OLD_DIM> >,
+         typename RosterT=std::set<Eigen::Matrix<double, OLD_DIM, 1>,
+                                   vector_less_than<OLD_DIM>,
+                                   Eigen::aligned_allocator<Eigen::Matrix<double, OLD_DIM, 1> > >,
          typename NewPointT=Eigen::Matrix<double, NEW_DIM, 1>,
-         typename NewRosterT=std::set<Eigen::Matrix<double, NEW_DIM, 1>, vector_less_than<NEW_DIM> > >
+         typename NewRosterT=std::set<Eigen::Matrix<double, NEW_DIM, 1>,
+                                      vector_less_than<NEW_DIM>,
+                                      Eigen::aligned_allocator<Eigen::Matrix<double, NEW_DIM, 1> > > >
 PointSet<NEW_DIM, NewPointT, NewRosterT>
 projection(const PointSet<OLD_DIM, PointT, RosterT>& ps,
            const std::array<bool, OLD_DIM>& keepDimension)
@@ -82,9 +86,13 @@ projection(const PointSet<OLD_DIM, PointT, RosterT>& ps,
 
 template<unsigned int OLD_DIM, unsigned int NEW_DIM,
          typename PointT=Eigen::Matrix<double, OLD_DIM, 1>,
-         typename RosterT=std::set<Eigen::Matrix<double, OLD_DIM, 1>, vector_less_than<OLD_DIM> >,
+         typename RosterT=std::set<Eigen::Matrix<double, OLD_DIM, 1>,
+                                   vector_less_than<OLD_DIM>,
+                                   Eigen::aligned_allocator<Eigen::Matrix<double, OLD_DIM, 1> > >,
          typename NewPointT=Eigen::Matrix<double, NEW_DIM, 1>,
-         typename NewRosterT=std::set<Eigen::Matrix<double, NEW_DIM, 1>, vector_less_than<NEW_DIM> > >
+         typename NewRosterT=std::set<Eigen::Matrix<double, NEW_DIM, 1>,
+                                      vector_less_than<NEW_DIM>,
+                                      Eigen::aligned_allocator<Eigen::Matrix<double, NEW_DIM, 1> > > >
 PolytopeSet<NEW_DIM, NewPointT, NewRosterT>
 projection(const PolytopeSet<OLD_DIM, PointT, RosterT>& ps,
            const std::array<bool, OLD_DIM>& keepDimension)

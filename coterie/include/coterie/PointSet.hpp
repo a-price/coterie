@@ -98,7 +98,9 @@ void append(C& container, V&& value)
 //         template typename RosterT=std::set<typename> >
 template<unsigned int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
-         typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>, vector_less_than<DIM> > >
+         typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>,
+                                   vector_less_than<DIM>,
+                                   Eigen::aligned_allocator<Eigen::Matrix<double, DIM, 1> > > >
 class PointSet : public Set<DIM, PointT>
 {
 public:
