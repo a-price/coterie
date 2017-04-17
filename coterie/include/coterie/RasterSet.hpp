@@ -99,6 +99,7 @@ public:
 		}
 	}
 
+	bool isInBounds(const PointT& pt) const;
 	PointT getState(const Index& idx) const;
 	Index getCell(const PointT& q) const;
 	Index getCell(size_t index) const;
@@ -319,6 +320,23 @@ template<unsigned int DIM, typename PointT>
 AABB<DIM, PointT> RasterSet<DIM, PointT>::getAABB() const
 {
 	return getActiveAABB(*this, data);
+}
+
+template<unsigned int DIM, typename PointT>
+bool RasterSetBase<DIM, PointT>::isInBounds(const PointT& pt) const
+{
+	for (size_t d = 0; d < DIM; ++d)
+	{
+		if (pt[d] < bounds[d].first)
+		{
+			return false;
+		}
+		else if(pt[d] > bounds[d].second)
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 template<unsigned int DIM, typename PointT>
