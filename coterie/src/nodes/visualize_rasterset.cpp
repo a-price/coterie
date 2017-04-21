@@ -304,10 +304,14 @@ void se2PosesCallback(const coterie_msgs::RasterSetConstPtr ps)
 	}
 
 	assert(layout.dim[0].stride == ps->byteArray.data.size());
+	assert(layout.dim[0].label == "theta");
+	assert(layout.dim[1].label == "x");
+	assert(layout.dim[2].label == "y");
 
 	// Configure the Point and Line markers
-	double spacing = (ps->extents[0].max-ps->extents[0].min)/(2*layout.dim[0].size);
-	double zscale = spacing/((ps->extents[2].max-ps->extents[2].min)/(2*layout.dim[2].size));
+	double spacing = (ps->extents[1].max-ps->extents[1].min)/(2*layout.dim[1].size);
+	double zscale = spacing/((ps->extents[0].max-ps->extents[0].min)/(2*layout.dim[0].size));
+
 	visualization_msgs::Marker pointMarker = generateMarker(0);
 	pointMarker.type = visualization_msgs::Marker::SPHERE_LIST;
 	pointMarker.scale.x = spacing*5.0/(5.0+static_cast<double>(setType));
@@ -343,14 +347,14 @@ void se2PosesCallback(const coterie_msgs::RasterSetConstPtr ps)
 				if (!isMember) { continue; }
 
 				geometry_msgs::Point p;
-				p.x = axis[0][i];
-				p.y = axis[1][j];
-				p.z = axis[2][k] * zscale;
+				p.z = axis[0][i] * zscale;
+				p.x = axis[1][j];
+				p.y = axis[2][k];
 
 				pointMarker.points.push_back(p);
 				lineMarker.points.push_back(p);
 
-				Eigen::Quaterniond q(Eigen::AngleAxisd(axis[2][k], Eigen::Vector3d::UnitZ()));
+				Eigen::Quaterniond q(Eigen::AngleAxisd(axis[0][i], Eigen::Vector3d::UnitZ()));
 				Eigen::Vector3d dir = q * (Eigen::Vector3d::UnitX() * spacing);
 				p.x += dir.x();
 				p.y += dir.y();

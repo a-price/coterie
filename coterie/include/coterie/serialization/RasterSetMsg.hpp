@@ -45,7 +45,7 @@ namespace coterie
 {
 
 template<unsigned int DIM>
-void serialize(const RasterSetBase<DIM>& set, coterie_msgs::RasterSet& msg)
+void serialize(const RasterSetBase<DIM>& set, coterie_msgs::RasterSet& msg, const std::vector<std::string> labels)
 {
 	size_t nElements = 1;
 	for (unsigned int s : set.shape) { nElements *= s; }
@@ -59,7 +59,7 @@ void serialize(const RasterSetBase<DIM>& set, coterie_msgs::RasterSet& msg)
 		msg.extents[d].min = set.bounds[d].first;
 		msg.extents[d].max = set.bounds[d].second;
 
-		msg.byteArray.layout.dim[d].label = std::to_string(d);
+		msg.byteArray.layout.dim[d].label = (labels.empty() ? std::to_string(d) : labels[d]);
 		msg.byteArray.layout.dim[d].size = set.shape[d];
 		msg.byteArray.layout.dim[d].stride = mul;
 		mul /= set.shape[d];
