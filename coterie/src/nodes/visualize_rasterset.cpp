@@ -51,7 +51,8 @@ enum SET_TYPE
 {
 	GOAL,
 	CAPTURE,
-	FRONTIER
+	FRONTIER,
+	DIFF
 };
 
 SET_TYPE setType = CAPTURE;
@@ -94,6 +95,14 @@ visualization_msgs::Marker generateMarker(const size_t id)
 		m.color.r = 0;
 		m.color.g = 0;
 		m.color.b = 1;
+		break;
+	}
+	case DIFF:
+	{
+		m.color.a = 0.7;
+		m.color.r = 1;
+		m.color.g = 0;
+		m.color.b = 0;
 		break;
 	}
 	default:
@@ -403,9 +412,13 @@ int main(int argc, char* argv[])
 	{
 		setType = FRONTIER;
 	}
+	else if ("diff" == setTypeStr)
+	{
+		setType = DIFF;
+	}
 	else
 	{
-		ROS_FATAL("Optional 'set_type' parameter must be one of the following: { 'capture', 'goal', 'frontier'}.");
+		ROS_FATAL("Optional 'set_type' parameter must be one of the following: { 'capture', 'goal', 'frontier', 'diff'}.");
 		return -1;
 	}
 
