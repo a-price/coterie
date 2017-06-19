@@ -39,7 +39,7 @@ find_package(Boost REQUIRED COMPONENTS
 )
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-find_package(Eigen3)
+find_package(Eigen3 QUIET)
 if(NOT EIGEN3_FOUND)
   # Fallback to cmake_modules
   find_package(cmake_modules REQUIRED)

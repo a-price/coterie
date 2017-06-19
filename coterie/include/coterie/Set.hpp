@@ -89,6 +89,9 @@ public:
 		return aabb;
 	}
 
+	AABB() : Set<DIM, PointT>() {}
+	AABB(const PointT& min_, const PointT& max_) : Set<DIM, PointT>(), min(min_), max(max_) {}
+
 	virtual bool contains(const PointT &q) const
 	{
 		bool isInside = true;

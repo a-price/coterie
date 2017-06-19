@@ -58,7 +58,7 @@ public:
 	virtual AABB getAABB() const override;
 	virtual bool isConvex() const override;
 
-	std::vector<std::shared_ptr<Set>> members;
+	std::vector<std::shared_ptr<Set<DIM, PointT>>> members;
 };
 
 template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
@@ -75,10 +75,10 @@ public:
 	virtual AABB getAABB() const override;
 	virtual bool isConvex() const override;
 
-	std::vector<std::shared_ptr<Set>> members;
+	std::vector<std::shared_ptr<Set<DIM, PointT>>> members;
 };
-
-template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
+/*
+template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1>, typename ...Sets >
 class CrossProductSet : public Set<DIM, PointT>
 {
 public:
@@ -88,20 +88,22 @@ public:
 
 	typedef ::coterie::AABB<DIM, PointT> AABB;
 
+	CrossProductSet(Sets... sets);
+
 	virtual bool contains(const PointT&) const override = 0;
 	virtual AABB getAABB() const override = 0;
 	virtual bool isConvex() const override = 0;
 
-	std::vector<std::shared_ptr<Set>> members;
+//	std::vector<std::shared_ptr<Set>> members;
 };
-
+*/
 
 // Implementations
 
 template<unsigned int DIM, typename PointT>
 bool UnionSet<DIM,PointT>::contains(const PointT& q) const
 {
-	for (const std::shared_ptr<Set>& s : members)
+	for (const std::shared_ptr<Set<DIM, PointT>>& s : members)
 	{
 		if (s->contains(q)) return true;
 	}
@@ -109,7 +111,7 @@ bool UnionSet<DIM,PointT>::contains(const PointT& q) const
 }
 
 template<unsigned int DIM, typename PointT>
-typename UnionSet<DIM,PointT>::AABB UnionSet::getAABB() const
+typename UnionSet<DIM,PointT>::AABB UnionSet<DIM, PointT>::getAABB() const
 {
 	throw std::logic_error("Function not yet implemented.");
 }
@@ -124,7 +126,7 @@ bool UnionSet<DIM,PointT>::isConvex() const
 template<unsigned int DIM, typename PointT>
 bool IntersectionSet<DIM,PointT>::contains(const PointT& q) const
 {
-	for (const std::shared_ptr<Set>& s : members)
+	for (const std::shared_ptr<Set<DIM, PointT>>& s : members)
 	{
 		if (!s->contains(q)) return false;
 	}
@@ -132,7 +134,7 @@ bool IntersectionSet<DIM,PointT>::contains(const PointT& q) const
 }
 
 template<unsigned int DIM, typename PointT>
-typename IntersectionSet<DIM,PointT>::AABB IntersectionSet::getAABB() const
+typename IntersectionSet<DIM,PointT>::AABB IntersectionSet<DIM, PointT>::getAABB() const
 {
 	throw std::logic_error("Function not yet implemented.");
 }
@@ -140,7 +142,7 @@ typename IntersectionSet<DIM,PointT>::AABB IntersectionSet::getAABB() const
 template<unsigned int DIM, typename PointT>
 bool IntersectionSet<DIM,PointT>::isConvex() const
 {
-	for (const std::shared_ptr<Set>& s : members)
+	for (const std::shared_ptr<Set<DIM, PointT>>& s : members)
 	{
 		if (!s->isConvex()) return false;
 	}
