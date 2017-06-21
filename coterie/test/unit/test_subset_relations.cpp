@@ -75,6 +75,41 @@ TEST(SubsetRelations, testPointSet)
 	ASSERT_FALSE(contains(poly.getAABB(), ps));
 }
 
+TEST(SubsetRelations, testDynamicPointSet)
+{
+	// Test unit circle
+	coterie::EllipsoidalSet<coterie::Dynamic> es(Eigen::VectorXd::Zero(2), Eigen::MatrixXd::Identity(2,2));
+
+	coterie::PointSet<coterie::Dynamic> ps(2);
+	ps.members.insert((Eigen::VectorXd(2) << 0.1,0.1).finished());
+	ps.members.insert((Eigen::VectorXd(2) << 0.5,-0.5).finished());
+	ps.members.insert((Eigen::VectorXd(2) << 0.999,0).finished());
+
+	ASSERT_EQ(3, ps.members.size());
+	ASSERT_TRUE(contains(es, ps));
+	ASSERT_TRUE(contains(es.getAABB(), ps));
+
+	ps.members.insert((Eigen::VectorXd(2) << 1,1).finished());
+
+	ASSERT_EQ(4, ps.members.size());
+	ASSERT_FALSE(contains(es, ps));
+
+	coterie::PointSet<coterie::Dynamic> ps2(ps);
+	ASSERT_EQ(ps.members.size(), ps2.members.size());
+	ASSERT_TRUE(contains(ps, ps2));
+	ASSERT_TRUE(contains(ps2, ps));
+
+	// Test Polytope set
+	coterie::PolytopeSet<coterie::Dynamic> poly(ps);
+	ASSERT_TRUE(contains(poly, ps));
+	ASSERT_TRUE(contains(poly.getAABB(), ps));
+
+	ps.members.insert((Eigen::VectorXd(2) << -10,-10).finished());
+
+	ASSERT_FALSE(contains(poly, ps));
+	ASSERT_FALSE(contains(poly.getAABB(), ps));
+}
+
 TEST(SubsetRelations, testEllipsoidInPolytope)
 {
 	// Create a 3D Diamond

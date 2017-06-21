@@ -60,7 +60,9 @@ class Set
 public:
 	using point_type = PointT;
 	static constexpr bool is_always_convex = false;
+	static constexpr int compile_time_dimension = DIM;
 	static constexpr int dimension = DIM;
+
 
 	using AABB = ::coterie::AABB<DIM, PointT>;
 
@@ -79,6 +81,7 @@ class Set<Dynamic, PointT>
 public:
 	using point_type = PointT;
 	static constexpr bool is_always_convex = false;
+	static constexpr int compile_time_dimension = Dynamic;
 	const int dimension;
 
 	using AABB = ::coterie::AABB<Dynamic, PointT>;
@@ -137,7 +140,7 @@ public:
 	AABB(const AABB<DIM, PointT>& other_) : Set<D, PointT>(), min(other_.min_), max(other_.max_) {}
 
 	ENABLE_IF_DYNAMIC_DIMENSION
-	AABB(const int dim_) : Set<D, PointT>(dim_) {}
+	AABB(const int dim_) : Set<D, PointT>(dim_), min(dim_), max(dim_) {}
 
 	ENABLE_IF_DYNAMIC_DIMENSION
 	AABB(const PointT& min_, const PointT& max_) : Set<D, PointT>(min_.size()), min(min_), max(max_) {}

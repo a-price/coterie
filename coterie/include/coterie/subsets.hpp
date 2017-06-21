@@ -140,9 +140,10 @@ template<class OuterT,
          class InnerT>
 typename std::enable_if<OuterT::is_always_convex && InnerT::is_always_convex && InnerT::is_polyhedral &&
                         std::is_convertible<typename InnerT::point_type, typename OuterT::point_type>::value &&
-                        OuterT::dimension == InnerT::dimension,
+                        OuterT::compile_time_dimension == InnerT::compile_time_dimension,
 bool>::type contains(const OuterT& outer, const InnerT& inner)
 {
+	assert(outer.dimension == inner.dimension);
 	for (const typename InnerT::point_type& pt : inner.getCorners())
 	{
 		if (!outer.contains(pt)) { return false; }

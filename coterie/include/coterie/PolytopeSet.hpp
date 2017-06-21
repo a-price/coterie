@@ -77,14 +77,16 @@ public:
 
 	ENABLE_IF_STATIC_DIMENSION
 	PolytopeSet(const PointSet<DIM, PointT, RosterT>& inputSet)
-	    : Set<D, PointT>()
+	    : Set<D, PointT>(),
+	      supportPoints()
 	{
 		initialize(inputSet);
 	}
 
 	ENABLE_IF_DYNAMIC_DIMENSION
 	PolytopeSet(const PointSet<DIM, PointT, RosterT>& inputSet)
-	    : Set<D, PointT>(inputSet.dimension)
+	    : Set<D, PointT>(inputSet.dimension),
+	      supportPoints(inputSet.dimension)
 	{
 		initialize(inputSet);
 	}
@@ -101,6 +103,30 @@ public:
 			supportPoints.members.clear();
 			supportPlanes.clear();
 		}
+	}
+
+	ENABLE_IF_STATIC_DIMENSION
+	inline PointT createPoint() const
+	{
+		return PointT();
+	}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	inline PointT createPoint() const
+	{
+		return PointT(Set<D, PointT>::dimension);
+	}
+
+	ENABLE_IF_STATIC_DIMENSION
+	inline Hyperplane createHyperplane() const
+	{
+		return Hyperplane();
+	}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	inline Hyperplane createHyperplane() const
+	{
+		return Hyperplane{createPoint(), 0.0};
 	}
 
 	virtual bool contains(const PointT& q) const override
@@ -206,7 +232,7 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 		// QHull represents halfspaces in the format Vx+b<0, with V=nHat^T.
 		// Our halfspace representation is Vx<b, so we need the negative offset
 		assert(facet->normal);
-		Hyperplane h;
+		Hyperplane h = createHyperplane();
 		h.distance = -facet->offset;
 		for (unsigned i = 0; i < Set<DIM, PointT>::dimension; ++i)
 		{
@@ -220,7 +246,7 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 	vertexT* vertex;
 	for (vertex=qh_qh->vertex_list; vertex && vertex->next; vertex=vertex->next)
 	{
-		PointT newSupport;
+		PointT newSupport = createPoint();
 		for (size_t j = 0; j < Set<DIM, PointT>::dimension; ++j)
 		{
 			newSupport[j] = vertex->point[j];
