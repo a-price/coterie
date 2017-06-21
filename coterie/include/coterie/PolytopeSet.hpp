@@ -70,14 +70,26 @@ public:
 	typedef RosterT roster_type;
 	static constexpr bool is_always_convex = true;
 	static constexpr bool is_polyhedral = true;
-	static constexpr int dimension = DIM;
 
 	typedef ::coterie::Hyperplane<DIM, PointT> Hyperplane;
 	PointSet<DIM, PointT, RosterT> supportPoints;
 	std::vector<Hyperplane, Eigen::aligned_allocator<Hyperplane> > supportPlanes;
 
-
+	ENABLE_IF_STATIC_DIMENSION
 	PolytopeSet(const PointSet<DIM, PointT, RosterT>& inputSet)
+	    : Set<D, PointT>()
+	{
+		initialize(inputSet);
+	}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	PolytopeSet(const PointSet<DIM, PointT, RosterT>& inputSet)
+	    : Set<D, PointT>(inputSet.dimension)
+	{
+		initialize(inputSet);
+	}
+
+	void initialize(const PointSet<DIM, PointT, RosterT>& inputSet)
 	{
 		bool succeeded = qhull(inputSet);
 		if (!succeeded)
@@ -154,16 +166,16 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 	FILE *errfile = stderr;
 
 	// Array of coordinates for each point
-	coordT *points = reinterpret_cast<coordT*> (calloc (inputSet.members.size() * DIM, sizeof (coordT)));
+	coordT *points = reinterpret_cast<coordT*> (calloc (inputSet.members.size() * Set<DIM, PointT>::dimension, sizeof (coordT)));
 
 	// Copy data over to input array
 	{
 		size_t i = 0;
 		for (const PointT& supportPoint : inputSet.members)
 		{
-			for (size_t j = 0; j < DIM; ++j)
+			for (size_t j = 0; j < Set<DIM, PointT>::dimension; ++j)
 			{
-				points[i * DIM + j] = static_cast<coordT> (supportPoint[j]);
+				points[i * Set<DIM, PointT>::dimension + j] = static_cast<coordT> (supportPoint[j]);
 			}
 			++i;
 		}
@@ -171,7 +183,7 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 
 	// Compute convex hull
 	if(qh_qh) { qh_save_qhull(); }
-	int exitcode = qh_new_qhull (DIM, static_cast<int>(inputSet.members.size()), points, ismalloc, const_cast<char*>(qhull_cmd.c_str()), outfile, errfile);
+	int exitcode = qh_new_qhull (Set<DIM, PointT>::dimension, static_cast<int>(inputSet.members.size()), points, ismalloc, const_cast<char*>(qhull_cmd.c_str()), outfile, errfile);
 
 	// 0 if no error from qhull
 	if (exitcode != 0)
@@ -196,7 +208,7 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 		assert(facet->normal);
 		Hyperplane h;
 		h.distance = -facet->offset;
-		for (unsigned i = 0; i < DIM; ++i)
+		for (unsigned i = 0; i < Set<DIM, PointT>::dimension; ++i)
 		{
 			h.normal[i] = facet->normal[i];
 		}
@@ -209,7 +221,7 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 	for (vertex=qh_qh->vertex_list; vertex && vertex->next; vertex=vertex->next)
 	{
 		PointT newSupport;
-		for (size_t j = 0; j < DIM; ++j)
+		for (size_t j = 0; j < Set<DIM, PointT>::dimension; ++j)
 		{
 			newSupport[j] = vertex->point[j];
 		}

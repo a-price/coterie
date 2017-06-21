@@ -42,25 +42,31 @@
 
 namespace coterie
 {
-template class PointSet<-1>;
 template class PointSet<1>;
 template class PointSet<2>;
 template class PointSet<3>;
 template class PointSet<4>;
 template class PointSet<6>;
+template class PointSet<-1>;
+
 template class RasterSet<1>;
 template class RasterSet<2>;
 template class RasterSet<3>;
 template class RasterSet<4>;
 template class RasterSet<6>;
+// NB: Boost implementation of RasterSet must be fixed-size at compile time
+
 template class EllipsoidalSet<1>;
 template class EllipsoidalSet<2>;
 template class EllipsoidalSet<3>;
 template class EllipsoidalSet<4>;
 template class EllipsoidalSet<6>;
+template class EllipsoidalSet<-1>;
+
 template class PolytopeSet<1>;
 template class PolytopeSet<2>;
 template class PolytopeSet<3>;
 template class PolytopeSet<4>;
 template class PolytopeSet<6>;
+template class PolytopeSet<-1>;
 }

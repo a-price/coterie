@@ -55,7 +55,6 @@ public:
 	typedef PointT point_type;
 	typedef MatrixT matrix_type;
 	static constexpr bool is_always_convex = true;
-	static constexpr int dimension = DIM;
 
 	PointT c;
 	MatrixT Q;
@@ -67,8 +66,20 @@ public:
 	 * @param center Center of the ellipsoid
 	 * @param covar SPD (not SPSD!) covariance matrix
 	 */
+	ENABLE_IF_STATIC_DIMENSION
 	EllipsoidalSet(const PointT& center, const MatrixT& covar)
 	    : Set<DIM, PointT>(),
+	      c(center),
+	      Q(covar),
+	      L(covar),
+	      Linv(MatrixT(L.matrixL()).inverse())
+	{
+
+	}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	EllipsoidalSet(const PointT& center, const MatrixT& covar)
+	    : Set<DIM, PointT>(center.size()),
 	      c(center),
 	      Q(covar),
 	      L(covar),
@@ -86,10 +97,10 @@ public:
 	virtual AABB<DIM, PointT> getAABB() const override
 	{
 		// NB: Could specialize since nHat is always a basis vector
-		AABB<DIM, PointT> aabb;
-		for (size_t d=0; d<DIM; ++d)
+		AABB<DIM, PointT> aabb = initializeAABB();
+		for (size_t d=0; d<Set<DIM, PointT>::dimension; ++d)
 		{
-			PointT nHat = PointT::Zero();
+			PointT nHat = zeroVector();
 			nHat[d] = 1;
 			std::pair<double, double> extents = projectToCenteredRay(nHat);
 			aabb.min[d] = extents.first;
@@ -99,6 +110,30 @@ public:
 	}
 
 	virtual bool isConvex() const override { return true; }
+
+	ENABLE_IF_STATIC_DIMENSION
+	inline AABB<DIM, PointT> initializeAABB() const
+	{
+		return AABB<DIM, PointT>::InitialBox();
+	}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	inline AABB<DIM, PointT> initializeAABB() const
+	{
+		return AABB<DIM, PointT>::InitialBox(Set<DIM, PointT>::dimension);
+	}
+
+	ENABLE_IF_STATIC_DIMENSION
+	inline PointT zeroVector() const
+	{
+		return PointT::Zero();
+	}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	inline PointT zeroVector() const
+	{
+		return PointT::Zero(Set<DIM, PointT>::dimension);
+	}
 
 	// Line segment connects (first*nHat, second*nHat)
 	std::pair<double, double> projectToCenteredRay(const Eigen::Matrix<double, DIM, 1>& nHat) const
