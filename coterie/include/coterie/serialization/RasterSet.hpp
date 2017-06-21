@@ -97,7 +97,7 @@ inline void serialize(Archive & ar,
 	split_free(ar, t, version);
 }
 
-template<typename Archive, unsigned int DIM, typename PointT>
+template<typename Archive, int DIM, typename PointT>
 void serialize(Archive & ar, coterie::RasterSet<DIM, PointT> & rs, const unsigned int /*version*/)
 {
     ar & rs.coverage;

@@ -47,7 +47,7 @@ namespace coterie
 {
 
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1> >
 class Hyperplane
 {
@@ -58,7 +58,7 @@ public:
 //	Vector center; = normal * distance
 };
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
          typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>,
                                    vector_less_than<DIM>,
@@ -70,7 +70,7 @@ public:
 	typedef RosterT roster_type;
 	static constexpr bool is_always_convex = true;
 	static constexpr bool is_polyhedral = true;
-	static constexpr unsigned int dimension = DIM;
+	static constexpr int dimension = DIM;
 
 	typedef ::coterie::Hyperplane<DIM, PointT> Hyperplane;
 	PointSet<DIM, PointT, RosterT> supportPoints;
@@ -131,7 +131,7 @@ extern "C"
 #endif
 }
 
-template<unsigned int DIM, typename PointT, typename RosterT>
+template<int DIM, typename PointT, typename RosterT>
 bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, RosterT>& inputSet, bool joggle)
 {
 	// True if qhull should free points in qh_freeqhull() or reallocation

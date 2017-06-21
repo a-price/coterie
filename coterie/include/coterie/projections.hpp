@@ -50,7 +50,7 @@ namespace coterie
  * @param keepDimension Array of dimensions to keep (# of trues must match NEW_DIM)
  * @return
  */
-template<unsigned int OLD_DIM, unsigned int NEW_DIM,
+template<int OLD_DIM, int NEW_DIM,
          typename PointT=Eigen::Matrix<double, OLD_DIM, 1>,
          typename RosterT=std::set<Eigen::Matrix<double, OLD_DIM, 1>,
                                    vector_less_than<OLD_DIM>,
@@ -84,7 +84,7 @@ projection(const PointSet<OLD_DIM, PointT, RosterT>& ps,
 	return newSet;
 }
 
-template<unsigned int OLD_DIM, unsigned int NEW_DIM,
+template<int OLD_DIM, int NEW_DIM,
          typename PointT=Eigen::Matrix<double, OLD_DIM, 1>,
          typename RosterT=std::set<Eigen::Matrix<double, OLD_DIM, 1>,
                                    vector_less_than<OLD_DIM>,

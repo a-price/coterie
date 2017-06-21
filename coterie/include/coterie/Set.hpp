@@ -46,18 +46,44 @@
 namespace coterie
 {
 
-template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
+const int Dynamic = Eigen::Dynamic;
+
+#define ENABLE_IF_DYNAMIC_DIMENSION template<int D = DIM, typename std::enable_if<Dynamic == D>::type* = nullptr>
+#define ENABLE_IF_STATIC_DIMENSION template<int D = DIM, typename std::enable_if<Dynamic != D>::type* = nullptr>
+
+template<int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
 class AABB;
 
-template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
+template<int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
 class Set
 {
 public:
-	typedef PointT point_type;
+	using point_type = PointT;
 	static constexpr bool is_always_convex = false;
-	static constexpr unsigned int dimension = DIM;
+	static constexpr int dimension = DIM;
 
-	typedef ::coterie::AABB<DIM, PointT> AABB;
+	using AABB = ::coterie::AABB<DIM, PointT>;
+
+	Set() {}
+
+	virtual bool contains(const PointT& q) const = 0;
+	virtual AABB getAABB() const = 0;
+	virtual bool isConvex() const { return is_always_convex; }
+};
+
+
+
+template<typename PointT>
+class Set<Dynamic, PointT>
+{
+public:
+	using point_type = PointT;
+	static constexpr bool is_always_convex = false;
+	const int dimension;
+
+	using AABB = ::coterie::AABB<Dynamic, PointT>;
+
+	Set(const int dim_) : dimension(dim_) {}
 
 	virtual bool contains(const PointT& q) const = 0;
 	virtual AABB getAABB() const = 0;
@@ -66,22 +92,22 @@ public:
 
 // TODO: Add generative set
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 class AABB : public Set<DIM, PointT>
 {
 public:
-	typedef PointT point_type;
+	using point_type = PointT;
 	static constexpr bool is_always_convex = true;
 	static constexpr bool is_polyhedral = true;
-	static constexpr unsigned int dimension = DIM;
 
 	PointT min;
 	PointT max;
 
+	ENABLE_IF_STATIC_DIMENSION
 	static AABB InitialBox()
 	{
 		AABB aabb;
-		for (size_t d=0; d<DIM; ++d)
+		for (size_t d=0; d < DIM; ++d)
 		{
 			aabb.min[d] = std::numeric_limits<double>::infinity();
 			aabb.max[d] = -std::numeric_limits<double>::infinity();
@@ -89,13 +115,40 @@ public:
 		return aabb;
 	}
 
-	AABB() : Set<DIM, PointT>() {}
-	AABB(const PointT& min_, const PointT& max_) : Set<DIM, PointT>(), min(min_), max(max_) {}
+	ENABLE_IF_DYNAMIC_DIMENSION
+	static AABB InitialBox(const size_t dim)
+	{
+		AABB aabb(dim);
+		for (size_t d=0; d < dim; ++d)
+		{
+			aabb.min[d] = std::numeric_limits<double>::infinity();
+			aabb.max[d] = -std::numeric_limits<double>::infinity();
+		}
+		return aabb;
+	}
+
+	ENABLE_IF_STATIC_DIMENSION
+	AABB() : Set<D, PointT>() {}
+
+	ENABLE_IF_STATIC_DIMENSION
+	AABB(const PointT& min_, const PointT& max_) : Set<D, PointT>(), min(min_), max(max_) {}
+
+	ENABLE_IF_STATIC_DIMENSION
+	AABB(const AABB<DIM, PointT>& other_) : Set<D, PointT>(), min(other_.min_), max(other_.max_) {}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	AABB(const int dim_) : Set<D, PointT>(dim_) {}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	AABB(const PointT& min_, const PointT& max_) : Set<D, PointT>(min_.size()), min(min_), max(max_) {}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	AABB(const AABB<DIM, PointT>& other_) : Set<D, PointT>(other_.dimension), min(other_.min_), max(other_.max_) {}
 
 	virtual bool contains(const PointT &q) const
 	{
 		bool isInside = true;
-		for (size_t d=0; d<DIM; ++d)
+		for (size_t d=0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			isInside = isInside && (q[d] >= min[d]);
 			isInside = isInside && (q[d] <= max[d]);
@@ -116,7 +169,7 @@ public:
 	bool isWellFormed() const
 	{
 		bool valid = true;
-		for (size_t d = 0; d < DIM; ++d)
+		for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			valid = valid && (max[d] >= min[d]);
 		}
@@ -126,7 +179,7 @@ public:
 	double getVolume() const
 	{
 		double v = 1;
-		for (size_t d = 0; d < DIM; ++d)
+		for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			double len = max[d] - min[d];
 			v *= len;
@@ -138,7 +191,7 @@ public:
 	std::vector<PointT> getCorners() const
 	{
 		// There will be 2^DIM corners to deal with
-		const int nCorners = (1<<DIM);
+		const int nCorners = (1 << Set<DIM, PointT>::dimension);
 		std::vector<PointT> corners(nCorners);
 		for (size_t perm = 0; perm < nCorners; ++perm)
 		{
@@ -160,7 +213,7 @@ public:
 	bool addPoint(const PointT &q)
 	{
 		bool isInside = true;
-		for (size_t d=0; d<DIM; ++d)
+		for (size_t d=0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			if (q[d] < min[d])
 			{
@@ -179,7 +232,7 @@ public:
 	PointT getCenter() const
 	{
 		PointT c;
-		for (size_t d = 0; d < DIM; ++d)
+		for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			c[d] = (max[d] + min[d])/2.0;
 		}
@@ -189,7 +242,7 @@ public:
 	PointT getDimensions() const
 	{
 		PointT c;
-		for (size_t d = 0; d < DIM; ++d)
+		for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			c[d] = (max[d] - min[d]);
 		}
@@ -197,7 +250,7 @@ public:
 	}
 };
 
-template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
+template<int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
 static AABB<DIM, PointT> operator+(const AABB<DIM, PointT>& aabb, const PointT& pt)
 {
 	AABB<DIM, PointT> newBB(aabb);

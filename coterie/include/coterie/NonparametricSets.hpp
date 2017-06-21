@@ -43,13 +43,13 @@
 namespace coterie
 {
 
-template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
+template<int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
 class EmptySet : public Set<DIM, PointT>
 {
 public:
 	typedef PointT point_type;
 	static constexpr bool is_always_convex = true;
-	static constexpr unsigned int dimension = DIM;
+	static constexpr int dimension = DIM;
 
 	typedef ::coterie::AABB<DIM, PointT> AABB;
 
@@ -58,13 +58,13 @@ public:
 	virtual bool isConvex() const override { return is_always_convex; } // P(x) (trivially) true \forall x \in \emptyset
 };
 
-template<unsigned int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
+template<int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
 class UniversalSet : public Set<DIM, PointT>
 {
 public:
 	typedef PointT point_type;
 	static constexpr bool is_always_convex = true;
-	static constexpr unsigned int dimension = DIM;
+	static constexpr int dimension = DIM;
 
 	typedef ::coterie::AABB<DIM, PointT> AABB;
 
@@ -73,7 +73,7 @@ public:
 	virtual bool isConvex() const override { return is_always_convex; }
 };
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 typename UniversalSet<DIM,PointT>::AABB UniversalSet<DIM,PointT>::getAABB() const
 {
 	return AABB{-PointT::Ones()*std::numeric_limits<double>::infinity(), PointT::Ones()*std::numeric_limits<double>::infinity()};

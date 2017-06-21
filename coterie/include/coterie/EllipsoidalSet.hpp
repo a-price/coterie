@@ -46,7 +46,7 @@
 namespace coterie
 {
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
          typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
 class EllipsoidalSet : public Set<DIM, PointT>
@@ -55,7 +55,7 @@ public:
 	typedef PointT point_type;
 	typedef MatrixT matrix_type;
 	static constexpr bool is_always_convex = true;
-	static constexpr unsigned int dimension = DIM;
+	static constexpr int dimension = DIM;
 
 	PointT c;
 	MatrixT Q;

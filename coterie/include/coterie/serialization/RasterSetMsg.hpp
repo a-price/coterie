@@ -44,11 +44,11 @@
 namespace coterie
 {
 
-template<unsigned int DIM>
+template<int DIM>
 void serialize(const RasterSetBase<DIM>& set, coterie_msgs::RasterSet& msg, const std::vector<std::string> labels)
 {
 	size_t nElements = 1;
-	for (unsigned int s : set.shape) { nElements *= s; }
+	for (int s : set.shape) { nElements *= s; }
 	assert(set.num_elements() == nElements);
 
 	size_t mul = nElements;
@@ -76,7 +76,7 @@ void serialize(const RasterSetBase<DIM>& set, coterie_msgs::RasterSet& msg, cons
 
 }
 
-template<unsigned int DIM>
+template<int DIM>
 void deserialize(const coterie_msgs::RasterSet& msg, RasterSet<DIM>& set)
 {
 	// Check dimensionality
@@ -104,7 +104,7 @@ void deserialize(const coterie_msgs::RasterSet& msg, RasterSet<DIM>& set)
 
 	// Populate data
 	size_t nElements = 1;
-	for (unsigned int s : set.shape) { nElements *= s; }
+	for (int s : set.shape) { nElements *= s; }
 
 	for (size_t i = 0; i < nElements; ++i)
 	{

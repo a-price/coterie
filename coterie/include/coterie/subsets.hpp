@@ -47,28 +47,28 @@
 namespace coterie
 {
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT>
 bool contains(const UniversalSet<DIM, PointT>& /*outer*/, const Set<DIM, PointT>& /*inner*/)
 {
 	return true;
 }
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT>
 bool contains(const EmptySet<DIM, PointT>& /*outer*/, const Set<DIM, PointT>& /*inner*/)
 {
 	return false;
 }
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT>
 bool contains(const Set<DIM, PointT>& /*outer*/, const EmptySet<DIM, PointT>& /*inner*/)
 {
 	return true;
 }
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
          typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>, vector_less_than<DIM> > >
 bool contains(const Set<DIM, PointT>& outer, const PointSet<DIM, PointT, RosterT>& inner)
@@ -80,7 +80,7 @@ bool contains(const Set<DIM, PointT>& outer, const PointSet<DIM, PointT, RosterT
 	return true;
 }
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1> >
 bool contains(const AABB<DIM, PointT>& outer, const AABB<DIM, PointT>& inner)
 {
@@ -93,7 +93,7 @@ bool contains(const AABB<DIM, PointT>& outer, const AABB<DIM, PointT>& inner)
 }
 
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
          typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
 bool contains(const AABB<DIM, PointT>& outer, const EllipsoidalSet<DIM, PointT, MatrixT>& inner)
@@ -101,7 +101,7 @@ bool contains(const AABB<DIM, PointT>& outer, const EllipsoidalSet<DIM, PointT, 
 	return contains(outer, inner.getAABB());
 }
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
          typename MatrixT=Eigen::Matrix<double, DIM, DIM>,
          typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>, vector_less_than<DIM> > >
@@ -114,7 +114,7 @@ bool contains(const PolytopeSet<DIM, PointT, RosterT>& outer, const EllipsoidalS
 	return true;
 }
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
          typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
 bool contains(const RasterSet<DIM, PointT>& outer, const EllipsoidalSet<DIM, PointT, MatrixT>& inner)

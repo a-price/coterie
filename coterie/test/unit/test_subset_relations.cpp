@@ -50,14 +50,17 @@ TEST(SubsetRelations, testPointSet)
 	ps.members.insert({0.5,-0.5});
 	ps.members.insert({0.999,0});
 
+	ASSERT_EQ(3, ps.members.size());
 	ASSERT_TRUE(contains(es, ps));
 	ASSERT_TRUE(contains(es.getAABB(), ps));
 
 	ps.members.insert({1,1});
 
+	ASSERT_EQ(4, ps.members.size());
 	ASSERT_FALSE(contains(es, ps));
 
 	coterie::PointSet<2> ps2(ps);
+	ASSERT_EQ(ps.members.size(), ps2.members.size());
 	ASSERT_TRUE(contains(ps, ps2));
 	ASSERT_TRUE(contains(ps2, ps));
 

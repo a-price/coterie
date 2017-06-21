@@ -42,6 +42,7 @@
 
 namespace coterie
 {
+template class PointSet<-1>;
 template class PointSet<1>;
 template class PointSet<2>;
 template class PointSet<3>;

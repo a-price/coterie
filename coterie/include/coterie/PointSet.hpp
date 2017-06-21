@@ -46,10 +46,12 @@
 #include <set>
 #include <assert.h>
 
+#include <iostream>
+
 namespace coterie
 {
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>>
 struct vector_less_than
 {
@@ -57,6 +59,21 @@ struct vector_less_than
 	                const PointT& b) const
 	{
 		for(size_t i=0; i<DIM; ++i)
+		{
+			if(a[i]<b[i]) return true;
+			if(a[i]>b[i]) return false;
+		}
+		return false;
+	}
+};
+
+template<typename PointT>
+struct vector_less_than<Dynamic, PointT>
+{
+	bool operator()(const PointT& a,
+	                const PointT& b) const
+	{
+		for(size_t i=0; i<a.size(); ++i)
 		{
 			if(a[i]<b[i]) return true;
 			if(a[i]>b[i]) return false;
@@ -95,8 +112,7 @@ void append(C& container, V&& value)
 { append_impl(container, std::forward<V>(value), 0); }
 
 
-//         template typename RosterT=std::set<typename> >
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
          typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>,
                                    vector_less_than<DIM>,
@@ -104,12 +120,25 @@ template<unsigned int DIM,
 class PointSet : public Set<DIM, PointT>
 {
 public:
-	typedef PointT point_type;
-	typedef RosterT roster_type;
+	using point_type = PointT;
+	using roster_type = RosterT;
 	static constexpr bool is_always_convex = false;
-	static constexpr unsigned int dimension = DIM;
 
 	RosterT members;
+
+	ENABLE_IF_STATIC_DIMENSION
+	PointSet() : Set<D, PointT>() {}
+
+	ENABLE_IF_STATIC_DIMENSION
+	PointSet(const PointSet<DIM, PointT, RosterT>& other) : Set<D, PointT>(), members(other.members) {}
+
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	PointSet(const int dim_) : Set<D, PointT>(dim_) {}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	PointSet(const PointSet<DIM, PointT, RosterT>& other) : Set<D, PointT>(other.dimension), members(other.members) {}
+
 	virtual bool contains(const PointT& q) const override { return ::coterie::contains(members, q); }
 	virtual AABB<DIM, PointT> getAABB() const override;
 	virtual bool isConvex() const override { return (members.size() <= 1); }
@@ -117,26 +146,63 @@ public:
 	virtual void insert(const PointT& p) { ::coterie::append(members, p); }
 };
 
-template<unsigned int DIM,
+// Use to partially specialize class methods without specializing whole class (too much duplication, and virtuals can't be templated)
+
+template<int DIM,
+         typename PointT,
+         typename RosterT>
+class PointSetSpecializations
+{
+public:
+	static
+	AABB<DIM, PointT> getAABB(const RosterT& members, const int /*dim*/)
+	{
+		AABB<DIM, PointT> aabb = AABB<DIM, PointT>::InitialBox();
+
+		for (const PointT& p : members)
+		{
+			for (size_t d=0; d < DIM; ++d)
+			{
+				aabb.min[d] = std::min(aabb.min[d], p[d]);
+				aabb.max[d] = std::max(aabb.max[d], p[d]);
+			}
+		}
+
+		return aabb;
+	}
+};
+
+template<typename PointT,
+         typename RosterT>
+class PointSetSpecializations<Dynamic, PointT, RosterT>
+{
+public:
+	static
+	AABB<Dynamic, PointT> getAABB(const RosterT& members, const int dim)
+	{
+		AABB<Dynamic, PointT> aabb = AABB<Dynamic, PointT>::InitialBox(dim);
+
+		for (const PointT& p : members)
+		{
+			for (size_t d=0; d < dim; ++d)
+			{
+				aabb.min[d] = std::min(aabb.min[d], p[d]);
+				aabb.max[d] = std::max(aabb.max[d], p[d]);
+			}
+		}
+
+		return aabb;
+	}
+};
+
+
+template<int DIM,
          typename PointT,
          typename RosterT >
 AABB<DIM, PointT> PointSet<DIM, PointT, RosterT>::getAABB() const
 {
-	AABB<DIM, PointT> aabb = AABB<DIM, PointT>::InitialBox();
-
-	for (const PointT& p : members)
-	{
-		for (size_t d=0; d<DIM; ++d)
-		{
-			aabb.min[d] = std::min(aabb.min[d], p[d]);
-			aabb.max[d] = std::max(aabb.max[d], p[d]);
-		}
-	}
-
-	return aabb;
+	return PointSetSpecializations<DIM, PointT, RosterT>::getAABB(members, Set<DIM, PointT>::dimension);
 }
-
-
 
 }
 

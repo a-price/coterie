@@ -44,33 +44,33 @@
 namespace coterie
 {
 
-template<unsigned int DIM>
+template<int DIM>
 using StateSet = boost::multi_array<bool, DIM>;
 
-template<unsigned int DIM>
+template<int DIM>
 using Axes = std::array<Eigen::VectorXd, DIM>;
 
-template<unsigned int DIM>
+template<int DIM>
 using Bounds = std::array<std::pair<double, double>, DIM>;
 
-template<unsigned int DIM>
+template<int DIM>
 using Index = boost::array<long int, DIM>;
 
-template<unsigned int DIM>
+template<int DIM>
 using Shape = boost::array<size_t, DIM>;
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 Index<DIM> getCellFromPoint(const PointT& point, const Shape<DIM>& shape, const Bounds<DIM>& bounds);
 
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1> >
 class RasterSetBase : public Set<DIM, PointT>
 {
 public:
 	typedef PointT point_type;
 	static constexpr bool is_always_convex = false;
-	static constexpr unsigned int dimension = DIM;
+	static constexpr int dimension = DIM;
 
 	typedef ::coterie::AABB<DIM> AABB;
 	typedef ::coterie::Axes<DIM> Axes;
@@ -118,7 +118,7 @@ public:
 };
 
 
-template<unsigned int DIM, typename PointT, typename StorageT>
+template<int DIM, typename PointT, typename StorageT>
 AABB<DIM, PointT> getActiveAABB(const RasterSetBase<DIM, PointT>& rsb, const StorageT& data)
 {
 	typedef typename RasterSetBase<DIM, PointT>::Index Index;
@@ -168,20 +168,20 @@ AABB<DIM, PointT> getActiveAABB(const RasterSetBase<DIM, PointT>& rsb, const Sto
 }
 
 // Forward declare set view
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1>,
          bool isConstView=true >
 class RasterSetView;
 
 
-template<unsigned int DIM,
+template<int DIM,
          typename PointT=Eigen::Matrix<double, DIM, 1> >
 class RasterSet : public RasterSetBase<DIM, PointT>
 {
 public:
 	typedef PointT point_type;
 	static constexpr bool is_always_convex = false;
-	static constexpr unsigned int dimension = DIM;
+	static constexpr int dimension = DIM;
 
 	typedef RasterSetBase<DIM, PointT> Base;
 	typedef typename Base::Axes Axes;
@@ -231,13 +231,13 @@ struct IndicesBuilder<RangeArrayType, IndexGenType, 1> {
    }
 };
 
-template<unsigned int DIM, typename PointT, bool isConstView>
+template<int DIM, typename PointT, bool isConstView>
 class RasterSetView : public RasterSetBase<DIM, PointT>
 {
 public:
 	typedef PointT point_type;
 	static constexpr bool is_always_convex = false;
-	static constexpr unsigned int dimension = DIM;
+	static constexpr int dimension = DIM;
 
 	typedef RasterSetBase<DIM, PointT> Base;
 	typedef typename Base::Axes Axes;
@@ -302,7 +302,7 @@ public:
 };
 
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 RasterSet<DIM, PointT>::RasterSet(const RasterSet::Shape& _shape, const RasterSet::Bounds& _bounds)
     : RasterSetBase<DIM, PointT>(_shape, _bounds),
       data(_shape)
@@ -310,19 +310,19 @@ RasterSet<DIM, PointT>::RasterSet(const RasterSet::Shape& _shape, const RasterSe
 
 }
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 bool RasterSet<DIM, PointT>::contains(const PointT& q) const
 {
 	return this->coverage.contains(q) && data(this->getCell(q));
 }
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 AABB<DIM, PointT> RasterSet<DIM, PointT>::getAABB() const
 {
 	return getActiveAABB(*this, data);
 }
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 bool RasterSetBase<DIM, PointT>::isInBounds(const PointT& pt) const
 {
 	for (size_t d = 0; d < DIM; ++d)
@@ -339,7 +339,7 @@ bool RasterSetBase<DIM, PointT>::isInBounds(const PointT& pt) const
 	return true;
 }
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 PointT RasterSetBase<DIM, PointT>::getState(const Index& idx) const
 {
 	PointT x;
@@ -347,7 +347,7 @@ PointT RasterSetBase<DIM, PointT>::getState(const Index& idx) const
 	return x;
 }
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 typename RasterSetBase<DIM, PointT>::Index RasterSetBase<DIM, PointT>::getCell(const PointT& point) const
 {
 	return getCellFromPoint<DIM, PointT>(point, this->shape, this->bounds);
@@ -358,7 +358,7 @@ typename RasterSetBase<DIM, PointT>::Index RasterSetBase<DIM, PointT>::getCell(c
 // (R,C)[i,j] -> C*i + j
 // (A,B,C)[i,j,k] -> (B*C)*i + C*j + k
 // (M,N,O,P)[i,j,k,l] -> (N*O*P)*i + (O*P)*j + P*k + l
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 typename RasterSetBase<DIM, PointT>::Index RasterSetBase<DIM, PointT>::getCell(size_t index) const
 {
 	size_t nElements = 1;
@@ -384,7 +384,7 @@ typename RasterSetBase<DIM, PointT>::Index RasterSetBase<DIM, PointT>::getCell(s
 	return res;
 }
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 RasterSetView<DIM, PointT, true> RasterSet<DIM, PointT>::getView(const AABB<DIM, PointT>& aabb) const
 {
 	typename RasterSetView<DIM, PointT>::Ranges ranges;
@@ -414,7 +414,7 @@ RasterSetView<DIM, PointT, true> RasterSet<DIM, PointT>::getView(const AABB<DIM,
 	return RasterSetView<DIM, PointT, true>(*this, ranges);
 }
 
-template<unsigned int DIM, typename PointT>
+template<int DIM, typename PointT>
 Index<DIM> getCellFromPoint(const PointT& point, const Shape<DIM>& shape, const Bounds<DIM>& bounds)
 {
 	Index<DIM> idx;

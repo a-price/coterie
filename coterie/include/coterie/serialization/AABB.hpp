@@ -46,7 +46,7 @@ namespace boost
 namespace serialization
 {
 
-template<typename Archive, unsigned int DIM, typename PointT>
+template<typename Archive, int DIM, typename PointT>
 void serialize(Archive & ar, coterie::AABB<DIM, PointT>& aabb, const unsigned int /*version*/)
 {
     ar & aabb.min;

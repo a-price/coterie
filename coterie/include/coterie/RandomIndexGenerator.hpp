@@ -44,7 +44,7 @@
 namespace coterie
 {
 
-template <unsigned N>
+template <int N>
 class RandomIndexGenerator
 {
 public:
