@@ -1,0 +1,41 @@
+stages:
+  - build
+
+.job_template: &job_definition
+  stage: build
+  only:
+    - master
+    - develop
+    - /^.*-devel$/
+    - /^release-.*$/
+    - ci-config
+    - hotfix
+  tags:
+    - docker
+  script:
+    - CHECKOUT_DIR=`pwd`
+    - rm -rf ~/catkin_ws/build
+    - rm -rf ~/catkin_ws/devel
+    - rm -rf ~/catkin_ws/src/coterie
+    - rm -f ~/catkin_ws/src/CMakeLists.txt
+    - mkdir -p ~/catkin_ws/src
+    - cd ~/catkin_ws/src
+    - source /opt/ros/`rosversion -d`/setup.bash
+    - export CMAKE_PREFIX_PATH=/usr/local/lib/CMake:$CMAKE_PREFIX_PATH
+    - catkin_init_workspace
+    - wstool status
+    - wstool update
+    - ln -s ${CHECKOUT_DIR} coterie
+    - cd ~/catkin_ws/
+    - catkin_make -DCMAKE_BUILD_TYPE=Debug
+    - catkin_make -DCMAKE_BUILD_TYPE=Debug run_tests && catkin_test_results
+    - catkin_make -DCMAKE_BUILD_TYPE=Release
+    - catkin_make -DCMAKE_BUILD_TYPE=Release run_tests && catkin_test_results
+
+build_indigo:
+  <<: *job_definition
+  image: kdr/test_coterie:indigo
+
+build_kinetic:
+  <<: *job_definition
+  image: kdr/test_coterie:kinetic
