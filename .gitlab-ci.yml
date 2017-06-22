@@ -1,7 +1,7 @@
-image: kdr/ros-ws:test_coterie
 stages:
   - build
-build_job:
+
+.job_template: &job_definition
   stage: build
   only:
     - master
@@ -32,3 +32,10 @@ build_job:
     - catkin_make -DCMAKE_BUILD_TYPE=Release
     - catkin_make -DCMAKE_BUILD_TYPE=Release run_tests && catkin_test_results
 
+build_indigo:
+  <<: *job_definition
+  image: kdr/test_coterie:indigo
+
+build_kinetic:
+  <<: *job_definition
+  image: kdr/test_coterie:kinetic
