@@ -10,6 +10,15 @@ endif()
 #set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 #set(CMAKE_BUILD_TYPE "Release")
 
+option(COVERAGE "Adds flags for gcov." OFF)
+if(COVERAGE)
+  set(CMAKE_BUILD_TYPE "Debug")
+  set(CMAKE_CXX_FLAGS "-fprofile-arcs -ftest-coverage ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "-lgcov ${CMAKE_EXE_LINKER_FLAGS}")
+  set(CMAKE_SHARED_LINKER_FLAGS "-lgcov ${CMAKE_SHARED_LINKER_FLAGS}")
+endif()
+
+
 add_definitions(-DBOOST_DISABLE_ASSERTS)
 
 # Add additional CMake files

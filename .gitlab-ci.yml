@@ -27,10 +27,11 @@ stages:
     - wstool update
     - ln -s ${CHECKOUT_DIR} coterie
     - cd ~/catkin_ws/
-    - catkin_make -DCMAKE_BUILD_TYPE=Debug
-    - catkin_make -DCMAKE_BUILD_TYPE=Debug run_tests && catkin_test_results
     - catkin_make -DCMAKE_BUILD_TYPE=Release
     - catkin_make -DCMAKE_BUILD_TYPE=Release run_tests && catkin_test_results
+    - catkin_make -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
+    - catkin_make -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON run_tests && catkin_test_results
+    - gcovr -r .
 
 build_indigo:
   <<: *job_definition
