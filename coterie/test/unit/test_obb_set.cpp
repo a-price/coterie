@@ -1,13 +1,13 @@
 /**
- * \file template_instantiations.cpp
+ * \file test_obb_set.cpp
  * \brief
  *
  * \author Andrew Price
- * \date 2016-11-22
+ * \date 2017-7-28
  *
  * \copyright
  *
- * Copyright (c) 2016, Georgia Tech Research Corporation
+ * Copyright (c) 2017, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * This file is provided under the following "BSD-style" License:
@@ -35,46 +35,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "coterie/PointSet.hpp"
-#include "coterie/RasterSet.hpp"
-#include "coterie/EllipsoidalSet.hpp"
-#include "coterie/PolytopeSet.hpp"
 #include "coterie/OrientedBoundingBoxSet.hpp"
 
-namespace coterie
+#include <gtest/gtest.h>
+
+using std::find;
+using std::begin;
+using std::end;
+
+TEST(OrientedBoundingBoxSet, testPointsSquare)
 {
-template class PointSet<1>;
-template class PointSet<2>;
-template class PointSet<3>;
-template class PointSet<4>;
-template class PointSet<6>;
-template class PointSet<-1>;
+	const int DIM = 2;
+	Eigen::Matrix2d axes = -Eigen::Matrix2d::Identity();
+	Eigen::Vector2d center = Eigen::Vector2d::UnitY();
+	Eigen::Vector2d extents = Eigen::Vector2d(1.0, 0.5);
 
-template class RasterSet<1>;
-template class RasterSet<2>;
-template class RasterSet<3>;
-template class RasterSet<4>;
-template class RasterSet<6>;
-// NB: Boost implementation of RasterSet must be fixed-size at compile time
+	coterie::OrientedBoundingBoxSet<DIM> obb(axes, center, extents);
+	ASSERT_TRUE(obb.contains(center));
+	ASSERT_FALSE(obb.contains(Eigen::Vector2d::Zero()));
 
-template class EllipsoidalSet<1>;
-template class EllipsoidalSet<2>;
-template class EllipsoidalSet<3>;
-template class EllipsoidalSet<4>;
-template class EllipsoidalSet<6>;
-template class EllipsoidalSet<-1>;
+	ASSERT_TRUE(obb.contains(Eigen::Vector2d(0.9, 1.0)));
+	ASSERT_FALSE(obb.contains(Eigen::Vector2d(1.1, 1.0)));
 
-template class PolytopeSet<1>;
-template class PolytopeSet<2>;
-template class PolytopeSet<3>;
-template class PolytopeSet<4>;
-template class PolytopeSet<6>;
-template class PolytopeSet<-1>;
+	ASSERT_TRUE(obb.contains(Eigen::Vector2d(-0.9, 1.0)));
+	ASSERT_FALSE(obb.contains(Eigen::Vector2d(-1.1, 1.0)));
 
-template class OrientedBoundingBoxSet<1>;
-template class OrientedBoundingBoxSet<2>;
-template class OrientedBoundingBoxSet<3>;
-template class OrientedBoundingBoxSet<4>;
-template class OrientedBoundingBoxSet<6>;
-template class OrientedBoundingBoxSet<-1>;
+	ASSERT_TRUE(fabs(2.0-obb.getVolume()) < 1e-9);
+
+	auto corners = obb.getCorners();
+	ASSERT_EQ(corners.size(), 4);
+	ASSERT_TRUE(find(begin(corners), end(corners), Eigen::Vector2d(1.0, 1.5)) != end(corners));
+}
+
+
+int main(int argc, char **argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+
+    return RUN_ALL_TESTS();
 }

@@ -199,7 +199,7 @@ public:
 		for (size_t perm = 0; perm < nCorners; ++perm)
 		{
 			PointT pt;
-			for (size_t d = 0; d < DIM; ++d)
+			for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
 			{
 				pt[d] = (perm & (1<<d)) ? min[d] : max[d];
 			}
