@@ -364,7 +364,7 @@ void se2PosesCallback(const coterie_msgs::RasterSetConstPtr ps)
 				pointMarker.points.push_back(p);
 				lineMarker.points.push_back(p);
 
-				Eigen::Quaterniond q(Eigen::AngleAxisd(axis[0][i], Eigen::Vector3d::UnitZ()));
+				Eigen::Quaterniond q(Eigen::AngleAxisd(axis[0][i], -Eigen::Vector3d::UnitZ()));
 				Eigen::Vector3d dir = q * (Eigen::Vector3d::UnitX() * spacing);
 				p.x += dir.x();
 				p.y += dir.y();
