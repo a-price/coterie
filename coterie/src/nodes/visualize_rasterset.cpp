@@ -319,11 +319,12 @@ void se2PosesCallback(const coterie_msgs::RasterSetConstPtr ps)
 
 	// Configure the Point and Line markers
 	double spacing = (ps->extents[1].max-ps->extents[1].min)/(2*layout.dim[1].size);
-	double zscale = spacing/((ps->extents[0].max-ps->extents[0].min)/(2*layout.dim[0].size));
+	//double zscale = spacing/((ps->extents[0].max-ps->extents[0].min)/(2*layout.dim[0].size));
+	double zscale = 0.0;
 
 	visualization_msgs::Marker pointMarker = generateMarker(0);
 	pointMarker.type = visualization_msgs::Marker::SPHERE_LIST;
-	pointMarker.scale.x = spacing*5.0/(5.0+static_cast<double>(setType));
+	pointMarker.scale.x = spacing*5.0/(5.0+2.0*static_cast<double>(setType));
 	pointMarker.scale.y = pointMarker.scale.x;
 	pointMarker.scale.z = pointMarker.scale.x;
 	pointMarker.color.a = 1;
