@@ -98,7 +98,7 @@ public:
 	{
 		// NB: Could specialize since nHat is always a basis vector
 		AABB<DIM, PointT> aabb = initializeAABB();
-		for (size_t d=0; d<Set<DIM, PointT>::dimension; ++d)
+		for (int d=0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			PointT nHat = zeroVector();
 			nHat[d] = 1;

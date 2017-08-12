@@ -110,7 +110,7 @@ public:
 	static AABB InitialBox()
 	{
 		AABB aabb;
-		for (size_t d=0; d < DIM; ++d)
+		for (int d=0; d < DIM; ++d)
 		{
 			aabb.min[d] = std::numeric_limits<double>::infinity();
 			aabb.max[d] = -std::numeric_limits<double>::infinity();
@@ -151,7 +151,7 @@ public:
 	virtual bool contains(const PointT &q) const
 	{
 		bool isInside = true;
-		for (size_t d=0; d < Set<DIM, PointT>::dimension; ++d)
+		for (int d=0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			isInside = isInside && (q[d] >= min[d]);
 			isInside = isInside && (q[d] <= max[d]);
@@ -172,7 +172,7 @@ public:
 	bool isWellFormed() const
 	{
 		bool valid = true;
-		for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
+		for (int d = 0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			valid = valid && (max[d] >= min[d]);
 		}
@@ -182,7 +182,7 @@ public:
 	double getVolume() const
 	{
 		double v = 1;
-		for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
+		for (int d = 0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			double len = max[d] - min[d];
 			v *= len;
@@ -196,10 +196,10 @@ public:
 		// There will be 2^DIM corners to deal with
 		const int nCorners = (1 << Set<DIM, PointT>::dimension);
 		std::vector<PointT> corners(nCorners);
-		for (size_t perm = 0; perm < nCorners; ++perm)
+		for (int perm = 0; perm < nCorners; ++perm)
 		{
 			PointT pt;
-			for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
+			for (int d = 0; d < Set<DIM, PointT>::dimension; ++d)
 			{
 				pt[d] = (perm & (1<<d)) ? min[d] : max[d];
 			}
@@ -216,7 +216,7 @@ public:
 	bool addPoint(const PointT &q)
 	{
 		bool isInside = true;
-		for (size_t d=0; d < Set<DIM, PointT>::dimension; ++d)
+		for (int d=0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			if (q[d] < min[d])
 			{
@@ -235,7 +235,7 @@ public:
 	PointT getCenter() const
 	{
 		PointT c;
-		for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
+		for (int d = 0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			c[d] = (max[d] + min[d])/2.0;
 		}
@@ -245,7 +245,7 @@ public:
 	PointT getDimensions() const
 	{
 		PointT c;
-		for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
+		for (int d = 0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			c[d] = (max[d] - min[d]);
 		}
