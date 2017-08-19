@@ -58,7 +58,7 @@ struct vector_less_than
 	bool operator()(const PointT& a,
 	                const PointT& b) const
 	{
-		for(size_t i=0; i<DIM; ++i)
+		for(int i=0; i<DIM; ++i)
 		{
 			if(a[i]<b[i]) return true;
 			if(a[i]>b[i]) return false;
@@ -73,7 +73,7 @@ struct vector_less_than<Dynamic, PointT>
 	bool operator()(const PointT& a,
 	                const PointT& b) const
 	{
-		for(size_t i=0; i<a.size(); ++i)
+		for(int i=0; i<a.size(); ++i)
 		{
 			if(a[i]<b[i]) return true;
 			if(a[i]>b[i]) return false;
@@ -161,7 +161,7 @@ public:
 
 		for (const PointT& p : members)
 		{
-			for (size_t d=0; d < DIM; ++d)
+			for (int d=0; d < DIM; ++d)
 			{
 				aabb.min[d] = std::min(aabb.min[d], p[d]);
 				aabb.max[d] = std::max(aabb.max[d], p[d]);
@@ -184,7 +184,7 @@ public:
 
 		for (const PointT& p : members)
 		{
-			for (size_t d=0; d < dim; ++d)
+			for (int d=0; d < dim; ++d)
 			{
 				aabb.min[d] = std::min(aabb.min[d], p[d]);
 				aabb.max[d] = std::max(aabb.max[d], p[d]);

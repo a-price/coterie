@@ -142,10 +142,10 @@ public:
 		// There will be 2^DIM corners to deal with
 		const int nCorners = (1 << Set<DIM, PointT>::dimension);
 		RosterT corners(nCorners);
-		for (size_t perm = 0; perm < nCorners; ++perm)
+		for (int perm = 0; perm < nCorners; ++perm)
 		{
 			PointT pt = center;
-			for (size_t d = 0; d < Set<DIM, PointT>::dimension; ++d)
+			for (int d = 0; d < Set<DIM, PointT>::dimension; ++d)
 			{
 				pt += extents[d] * axes.col(d) * ((perm & (1<<d)) ? -1.0 : 1.0);
 			}

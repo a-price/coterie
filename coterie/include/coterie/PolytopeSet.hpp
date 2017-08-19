@@ -196,10 +196,10 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 
 	// Copy data over to input array
 	{
-		size_t i = 0;
+		int i = 0;
 		for (const PointT& supportPoint : inputSet.members)
 		{
-			for (size_t j = 0; j < Set<DIM, PointT>::dimension; ++j)
+			for (int j = 0; j < Set<DIM, PointT>::dimension; ++j)
 			{
 				points[i * Set<DIM, PointT>::dimension + j] = static_cast<coordT> (supportPoint[j]);
 			}
@@ -234,7 +234,7 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 		assert(facet->normal);
 		Hyperplane h = createHyperplane();
 		h.distance = -facet->offset;
-		for (unsigned i = 0; i < Set<DIM, PointT>::dimension; ++i)
+		for (int i = 0; i < Set<DIM, PointT>::dimension; ++i)
 		{
 			h.normal[i] = facet->normal[i];
 		}
@@ -247,7 +247,7 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 	for (vertex=qh_qh->vertex_list; vertex && vertex->next; vertex=vertex->next)
 	{
 		PointT newSupport = createPoint();
-		for (size_t j = 0; j < Set<DIM, PointT>::dimension; ++j)
+		for (int j = 0; j < Set<DIM, PointT>::dimension; ++j)
 		{
 			newSupport[j] = vertex->point[j];
 		}
