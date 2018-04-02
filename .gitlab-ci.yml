@@ -27,6 +27,7 @@ stages:
     - wstool update
     - ln -s ${CHECKOUT_DIR} coterie
     - cd ~/catkin_ws/
+    - apt-get update && rosdep install --from-paths src --ignore-src -r -y
     - catkin_make -DCMAKE_BUILD_TYPE=Release
     - catkin_make -DCMAKE_BUILD_TYPE=Release run_tests && catkin_test_results
     - catkin_make -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
