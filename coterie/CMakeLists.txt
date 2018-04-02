@@ -1,37 +1,28 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(coterie)
 
-set(BUILD_FLAGS "-std=c++11 -Wshadow -Wall -Wextra -Wpedantic")
-if(NOT CMAKE_BUILD_TYPE)
-   set(CMAKE_BUILD_TYPE RelWithDebInfo ... FORCE)
-   message(STATUS "Setting CMAKE_BUILD_TYPE to ${CMAKE_BUILD_TYPE} (default).")
-endif()
+# Add additional CMake files
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+include(AIMMacros)
+
+use_cxx_standard(11)
+
+use_strict_compile_flags()
+
+use_default_build_type(RelWithDebInfo)
+
+enable_coverage_build()
+
 #set(CMAKE_BUILD_TYPE "Debug")
 #set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 #set(CMAKE_BUILD_TYPE "Release")
 
-option(COVERAGE "Adds flags for gcov." OFF)
-if(COVERAGE)
-  set(CMAKE_BUILD_TYPE "Debug")
-  set(CMAKE_CXX_FLAGS "-fprofile-arcs -ftest-coverage ${CMAKE_CXX_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS "-lgcov ${CMAKE_EXE_LINKER_FLAGS}")
-  set(CMAKE_SHARED_LINKER_FLAGS "-lgcov ${CMAKE_SHARED_LINKER_FLAGS}")
-endif()
-
 
 add_definitions(-DBOOST_DISABLE_ASSERTS)
 
-# Add additional CMake files
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
-
-# Set build flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BUILD_FLAGS}")
-
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
-  cmake_modules
   coterie_msgs
-  message_generation
   roscpp
   roslib
   std_msgs
@@ -48,18 +39,12 @@ find_package(Boost REQUIRED COMPONENTS
 )
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-find_package(Eigen3 QUIET)
-if(NOT EIGEN3_FOUND)
-  # Fallback to cmake_modules
-  find_package(cmake_modules REQUIRED)
-  find_package(Eigen REQUIRED)
-  set(EIGEN3_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
-  set(EIGEN3_DEFINITIONS ${EIGEN_DEFINITIONS})
-else()
-  set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
-endif()
+find_eigen3_ros()
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
 add_definitions(${EIGEN3_DEFINITIONS})
+
+# Include OpenMP
+use_openmp()
 
 find_package(Qhull REQUIRED)
 include_directories(SYSTEM ${QHULL_INCLUDE_DIR})
@@ -79,7 +64,7 @@ catkin_python_setup()
 catkin_package(
  INCLUDE_DIRS include ${EIGEN3_INCLUDE_DIRS}
  LIBRARIES ${PROJECT_NAME} ${QHULL_LIBRARIES}
- CATKIN_DEPENDS cmake_modules roscpp roslib std_msgs visualization_msgs
+ CATKIN_DEPENDS coterie_msgs roscpp roslib std_msgs visualization_msgs
 #  DEPENDS system_lib
 )
 
@@ -154,7 +139,7 @@ install(PROGRAMS
 #############
 
 ## Turn on testing
-enable_testing()
+#enable_testing()
 
 if(CATKIN_ENABLE_TESTING)
 #  find_package(rostest REQUIRED)
