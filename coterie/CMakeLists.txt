@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 2.8.11)
 project(coterie)
 
 # Add additional CMake files
@@ -48,7 +48,18 @@ use_openmp()
 
 find_package(Qhull REQUIRED)
 include_directories(SYSTEM ${QHULL_INCLUDE_DIR})
-link_libraries(${QHULL_LIBRARIES})
+
+find_package( CGAL QUIET COMPONENTS
+  Core
+)
+if ( NOT CGAL_FOUND )
+  message(STATUS "This project requires the CGAL library, and will not be compiled.")
+  return()
+
+else()
+  include(${CGAL_USE_FILE})
+endif()
+
 
 catkin_python_setup()
 
@@ -80,7 +91,13 @@ include_directories(include)
 add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/template_instantiations.cpp
 )
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}
+  ${Boost_LIBRARIES}
+  ${QHULL_LIBRARIES}
+)
+if (CGAL_FOUND)
+  target_link_libraries(${PROJECT_NAME} ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
+endif()
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

@@ -36,8 +36,19 @@
  */
 
 #include "coterie/EllipsoidalSet.hpp"
+#include "coterie/subsets.hpp"
 
 #include <gtest/gtest.h>
+
+#include <CGAL/Cartesian_d.h>
+#include <CGAL/MP_Float.h>
+#include <CGAL/point_generators_d.h>
+#include <CGAL/Approximate_min_ellipsoid_d.h>
+#include <CGAL/Approximate_min_ellipsoid_d_traits_d.h>
+#include <Eigen/StdVector>
+#include <vector>
+#include <iostream>
+#include <coterie/PointSet.hpp>
 
 TEST(EllipsoidalSet, testContains)
 {
@@ -81,6 +92,110 @@ TEST(EllipsoidalSet, testContains)
 
 	ASSERT_TRUE(aabb.contains(es.c));
 
+}
+
+
+using Kernel = CGAL::Cartesian_d<double>;
+using ET = CGAL::MP_Float;
+using Traits = CGAL::Approximate_min_ellipsoid_d_traits_d<Kernel,ET>;
+using Point = Traits::Point;
+using Point_list = std::vector<Point>;
+//using Point = Eigen::Vector2d;
+//using Point_list = std::vector<Point, Eigen::aligned_allocator<Point>>;
+using AME = CGAL::Approximate_min_ellipsoid_d<Traits>;
+
+// https://doc.cgal.org/latest/Bounding_volumes/classCGAL_1_1Approximate__min__ellipsoid__d.html
+TEST(EllipsoidalSet, optimistic_fit)
+{
+	const int      n = 1000;                // number of points
+	const int      d = 2;                   // dimension
+	const double eps = 0.01;                // approximation ratio is (1+eps)
+	const double side = 100.0;
+
+	// create a set of random points:
+	Point_list P;
+	CGAL::Random_points_in_cube_d<Point> rpg(d,side);
+	for (int i = 0; i < n; ++i)
+	{
+		P.push_back(*rpg);
+		++rpg;
+	}
+	// compute approximation:
+	Traits traits;
+	AME ame(eps, P.begin(), P.end(), traits);
+
+	Eigen::VectorXd c = Eigen::VectorXd::Zero(d);
+
+	// output center coordinates:
+	const AME::Center_coordinate_iterator c_begin = ame.center_cartesian_begin();
+	for (AME::Center_coordinate_iterator c_it = c_begin;
+	     c_it != ame.center_cartesian_end();
+	     ++c_it)
+	{
+		c[c_it-c_begin] = *c_it;
+	}
+	std::cout << "Cartesian center coordinates: ";
+	std::cout << c.transpose();
+	std::cout << ".\n";
+
+	// https://en.wikipedia.org/wiki/Ellipsoid#As_quadric
+	Eigen::VectorXd eigvals = Eigen::VectorXd::Zero(d);
+	Eigen::MatrixXd eigvecs = Eigen::MatrixXd::Zero(d, d);
+
+	if (d == 2 || d == 3)
+	{
+		// output  axes:
+		AME::Axes_lengths_iterator axes = ame.axes_lengths_begin();
+		for (int i = 0; i < d; ++i)
+		{
+			double len = *axes++;
+			double eigval = 1.0/(len*len);
+			eigvals[i] = eigval;
+			std::cout << "Semiaxis " << i << " has length " << len << " (eig: " << eigval << ")\n"
+			          << "and Cartesian coordinates ";
+
+			AME::Axes_direction_coordinate_iterator d_begin = ame.axis_direction_cartesian_begin(i);
+			for (AME::Axes_direction_coordinate_iterator d_it = d_begin;
+			     d_it != ame.axis_direction_cartesian_end(i); ++d_it)
+			{
+				eigvecs.col(i)[d_it-d_begin] = *d_it;
+				std::cout << *d_it << ' ';
+			}
+			std::cout << ".\n";
+		}
+	}
+
+	for (int i = 0; i < d; ++i)
+	{
+		ASSERT_GE(eigvals[i], 0.0);
+		ASSERT_LT(fabs(1.0-eigvecs.col(i).norm()), 1e-9);
+		ASSERT_LT(eigvecs.col(i).dot(eigvecs.col((i+1)%d)), 1e-9);
+	}
+
+	// https://en.wikipedia.org/wiki/Eigendecomposition_of_a_matrix#Eigendecomposition_of_a_matrix
+	// https://eigen.tuxfamily.org/dox/classEigen_1_1EigenSolver.html
+	// NB: inverse() is ok here b/c eigvecs are lin. ind. and dim < 4
+	Eigen::MatrixXd A = eigvecs * eigvals.asDiagonal() * eigvecs.inverse();
+
+	std::cout << "A: \n" << A << std::endl;
+
+
+	double eta = ame.defining_scalar();
+	std::cout << "Epsilon: " << ame.achieved_epsilon() << std::endl;
+	std::cout << "Eta: " << eta << std::endl;
+
+	coterie::EllipsoidalSet<-1> ell(c, A);
+
+	coterie::PointSet<-1> ps(d);
+	for (int i = 0; i < n; ++i)
+	{
+		Eigen::VectorXd p = Eigen::VectorXd::Zero(d);
+		for (int j = 0; j < d; ++j) { p[j] = P[i].cartesian(j); }
+		ASSERT_TRUE(ell.contains(p));
+		ps.insert(p);
+	}
+
+	ASSERT_TRUE(coterie::contains(ell, ps));
 }
 
 
