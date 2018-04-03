@@ -40,9 +40,15 @@
 #include "coterie/EllipsoidalSet.hpp"
 #include "coterie/PolytopeSet.hpp"
 #include "coterie/OrientedBoundingBoxSet.hpp"
+#include "coterie/construction.hpp"
 
 namespace coterie
 {
+
+// Needed to put this in file wanting to access dimension
+template<int DIM, typename PointT>
+constexpr int Set<DIM, PointT>::dimension;
+
 template class PointSet<1>;
 template class PointSet<2>;
 template class PointSet<3>;
@@ -77,4 +83,8 @@ template class OrientedBoundingBoxSet<3>;
 template class OrientedBoundingBoxSet<4>;
 template class OrientedBoundingBoxSet<6>;
 template class OrientedBoundingBoxSet<-1>;
+
+template<> EllipsoidalSet<2> minVolumeEnclosingEllipsoid(const PointSet<2>& ps);
+template<> EllipsoidalSet<3> minVolumeEnclosingEllipsoid(const PointSet<3>& ps);
+template<> EllipsoidalSet<-1> minVolumeEnclosingEllipsoid(const PointSet<-1>& ps);
 }

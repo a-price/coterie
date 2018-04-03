@@ -105,9 +105,16 @@ endif()
 # add_dependencies(coterie ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(visualize_rasterset src/nodes/visualize_rasterset.cpp)
-add_dependencies(visualize_rasterset ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(visualize_rasterset
+add_executable(visualize_raster_set src/nodes/visualize_raster_set.cpp)
+add_dependencies(visualize_raster_set ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(visualize_raster_set
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+)
+
+add_executable(visualize_ellipsoidal_set src/nodes/visualize_ellipsoidal_set.cpp)
+add_dependencies(visualize_ellipsoidal_set ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(visualize_ellipsoidal_set
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )

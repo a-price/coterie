@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   AABB.msg
+  EllipsoidalSet.msg
   Hyperplane.msg
   MultiArrayExtents.msg
   Point.msg

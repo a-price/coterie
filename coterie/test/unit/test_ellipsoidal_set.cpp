@@ -37,18 +37,14 @@
 
 #include "coterie/EllipsoidalSet.hpp"
 #include "coterie/subsets.hpp"
+#include "coterie/construction.hpp"
 
 #include <gtest/gtest.h>
 
-#include <CGAL/Cartesian_d.h>
-#include <CGAL/MP_Float.h>
-#include <CGAL/point_generators_d.h>
-#include <CGAL/Approximate_min_ellipsoid_d.h>
-#include <CGAL/Approximate_min_ellipsoid_d_traits_d.h>
-#include <Eigen/StdVector>
-#include <vector>
-#include <iostream>
-#include <coterie/PointSet.hpp>
+// Not sure why we need this and can't link to the one in template_instantiations
+template<int DIM, typename PointT>
+constexpr int coterie::Set<DIM, PointT>::dimension;
+
 
 TEST(EllipsoidalSet, testContains)
 {
@@ -105,7 +101,7 @@ using Point_list = std::vector<Point>;
 using AME = CGAL::Approximate_min_ellipsoid_d<Traits>;
 
 // https://doc.cgal.org/latest/Bounding_volumes/classCGAL_1_1Approximate__min__ellipsoid__d.html
-TEST(EllipsoidalSet, optimistic_fit)
+TEST(EllipsoidalSet, test_fit_internals)
 {
 	const int      n = 1000;                // number of points
 	const int      d = 2;                   // dimension
@@ -196,6 +192,67 @@ TEST(EllipsoidalSet, optimistic_fit)
 	}
 
 	ASSERT_TRUE(coterie::contains(ell, ps));
+}
+
+template<int DIM,
+	typename PointT=Eigen::Matrix<double, DIM, 1>>
+class PSI
+{
+public:
+	static PointT initPoint(const int) { return PointT(); }
+	static coterie::PointSet<DIM, PointT> initSet(const int) { return coterie::PointSet<DIM, PointT>(); }
+};
+
+template<>
+class PSI<-1, Eigen::Matrix<double, -1, 1>>
+{
+public:
+	using PointT = Eigen::Matrix<double, -1, 1>;
+	static PointT initPoint(const int dim) { return  PointT(dim); }
+	static coterie::PointSet<-1, PointT> initSet(const int dim) { return coterie::PointSet<-1, PointT>(dim); }
+};
+
+template<int DIM,
+	typename PointT=Eigen::Matrix<double, DIM, 1>>
+void test_optimistic_fit()
+{
+	const int      n = 1000;                // number of points
+	const int      d = (DIM < 0) ? 2 : DIM; // dimension
+	const double side = 100.0;
+
+	// create a set of random points:
+	coterie::PointSet<DIM, PointT> ps = PSI<DIM, PointT>::initSet(d);
+
+	ASSERT_EQ(d, ps.dimension);
+
+	CGAL::Random_points_in_cube_d<Point> rpg(d,side);
+	for (int i = 0; i < n; ++i)
+	{
+		Point p = *rpg;
+		PointT q = PSI<DIM, PointT>::initPoint(d);
+		for (int j = 0; j < d; ++j)
+		{
+			q[j] = p.cartesian(j);
+		}
+		ps.insert(q);
+		++rpg;
+	}
+
+	coterie::EllipsoidalSet<DIM> ell = coterie::minVolumeEnclosingEllipsoid<DIM>(ps);
+
+	for (const PointT& m : ps.members)
+	{
+		ASSERT_TRUE(ell.contains(m));
+	}
+
+	ASSERT_TRUE(coterie::contains(ell, ps));
+
+}
+TEST(EllipsoidalSet, optimistic_fit)
+{
+	test_optimistic_fit<-1>();
+	test_optimistic_fit<2>();
+	test_optimistic_fit<3>();
 }
 
 

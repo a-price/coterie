@@ -42,21 +42,27 @@
 
 #include <visualization_msgs/Marker.h>
 
+#include <Eigen/Geometry>
 #include <Eigen/Eigenvalues>
 
 namespace coterie
 {
 
-template< typename PointT=Eigen::Matrix<double, 3, 1>,
-          typename MatrixT=Eigen::Matrix<double, 3, 3> >
-visualization_msgs::Marker visualizePosition(const EllipsoidalSet<3, PointT, MatrixT>& es,
+template< int DIM=3,
+          typename PointT=Eigen::Matrix<double, DIM, 1>,
+          typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
+visualization_msgs::Marker visualizePosition(const EllipsoidalSet<DIM, PointT, MatrixT>& es,
                                              const PointT& scale = PointT::Ones())
 {
 	// NB: computeDirect for 2x2 or 3x3 matrices
 	Eigen::SelfAdjointEigenSolver<MatrixT> eigSolver;
 	eigSolver.computeDirect(es.Q);
 
-	Eigen::Quaterniond q(eigSolver.eigenvectors());
+	// Handle dimensions other than 3
+	MatrixT V = eigSolver.eigenvectors();
+	Eigen::Matrix3d Vaug = Eigen::Matrix3d::Identity();
+	Vaug.topLeftCorner<DIM, DIM>() = V;
+	Eigen::Quaterniond q(Vaug);
 
 	visualization_msgs::Marker marker;
 	marker.header.frame_id = "World";
@@ -65,17 +71,34 @@ visualization_msgs::Marker visualizePosition(const EllipsoidalSet<3, PointT, Mat
 	marker.id = 0;
 	marker.type = visualization_msgs::Marker::SPHERE;
 	marker.action = visualization_msgs::Marker::ADD;
+	marker.frame_locked = true;
 	marker.pose.position.x = es.c[0] * scale.x();
 	marker.pose.position.y = es.c[1] * scale.y();
-	marker.pose.position.z = es.c[2] * scale.z();
+	if (DIM >= 3)
+	{
+		marker.pose.position.z = es.c[2] * scale.z();
+	}
+	else
+	{
+		marker.pose.position.z = 0;
+	}
 	marker.pose.orientation.x = q.x();
 	marker.pose.orientation.y = q.y();
 	marker.pose.orientation.z = q.z();
 	marker.pose.orientation.w = q.w();
-	marker.scale.x = eigSolver.eigenvalues()[0] * scale.x();
-	marker.scale.y = eigSolver.eigenvalues()[1] * scale.y();
-	marker.scale.z = eigSolver.eigenvalues()[2] * scale.z();
-	marker.color.a = 1.0; // Don't forget to set the alpha!
+	// NB: 1/sqrt(v) is the semi-axis length, we want the full axis length
+	marker.scale.x = 2.0 * 1.0/sqrt(eigSolver.eigenvalues()[0]) * scale.x();
+	marker.scale.y = 2.0 *1.0/sqrt(eigSolver.eigenvalues()[1]) * scale.y();
+	if (DIM >= 3)
+	{
+		marker.scale.z = 2.0 *1.0/sqrt(eigSolver.eigenvalues()[2]) * scale.z();
+	}
+	else
+	{
+		marker.scale.z = 0;
+	}
+
+	marker.color.a = 0.5; // Don't forget to set the alpha!
 	marker.color.r = 1.0;
 	marker.color.g = 1.0;
 	marker.color.b = 0.0;

@@ -46,6 +46,8 @@
 #include <set>
 #include <assert.h>
 
+#include <Eigen/StdVector>
+
 #include <iostream>
 
 namespace coterie
