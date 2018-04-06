@@ -37,13 +37,14 @@
 
 #include <ros/ros.h>
 #include "coterie/EllipsoidalSet.hpp"
-#include "coterie/visualization/EllipsoidalSet.hpp"
+#include "coterie/visualization/ellipsoidal_set.hpp"
 #include "coterie/construction.hpp"
 #include <coterie_msgs/EllipsoidalSet.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <Eigen/Geometry>
 
 std::string frame = "World";
+std::string ns = "position_belief";
 
 ros::Publisher markerPub;
 ros::Subscriber r2Sub;
@@ -55,14 +56,14 @@ bool checkSizes(const coterie_msgs::EllipsoidalSetConstPtr ps, const int dim)
 {
 	if (dim != (int)ps->c.data.size())
 	{
-		ROS_ERROR_STREAM("R2 Requires 2 dimensions: <x,y>. Message contains "
+		ROS_ERROR_STREAM("Requires " << dim << " dimensions: <x,y>. Message contains "
 			                 << ps->c.data.size() << ".");
 		return false;
 	}
 
 	if (dim*dim != (int)ps->A.size())
 	{
-		ROS_ERROR_STREAM("R2 Requires 2x2 dimensions: <x,y>. Message 'A' matrix contains "
+		ROS_ERROR_STREAM("Requires " << dim << "x" << dim << " dimensions: <x,y>. Message 'A' matrix contains "
 			                 << ps->A.size() << ".");
 		return false;
 	}
@@ -81,6 +82,7 @@ void r2Callback(const coterie_msgs::EllipsoidalSetConstPtr ps)
 
 	visualization_msgs::Marker m = coterie::visualizePosition<2>(ell);
 
+	m.ns = ns;
 	m.header.frame_id = frame;
 	m.header.stamp = ros::Time::now();
 	markerPub.publish(m);
@@ -97,6 +99,15 @@ void r3Callback(const coterie_msgs::EllipsoidalSetConstPtr ps)
 
 	visualization_msgs::Marker m = coterie::visualizePosition<3>(ell);
 
+	m.ns = ns;
+	float r = rand() / (float)RAND_MAX;
+	float g = rand() / (float)RAND_MAX;
+	float b = rand() / (float)RAND_MAX;
+	float norm = sqrt(r*r+g*g+b*b);
+	m.color.r = r/norm;
+	m.color.g = g/norm;
+	m.color.b = b/norm;
+	m.color.a = 0.5;
 	m.header.frame_id = frame;
 	m.header.stamp = ros::Time::now();
 	markerPub.publish(m);
@@ -128,6 +139,7 @@ int main(int argc, char* argv[])
 {
 	ros::init(argc, argv, "visualize_ellipsoid");
 	ros::NodeHandle nh, pnh("~");
+	srand (std::hash<std::string>{}(ros::this_node::getName()));
 
 //	if (!nh.getParam("target_model", model))
 //	{
@@ -136,6 +148,7 @@ int main(int argc, char* argv[])
 //	}
 
 	frame = pnh.param("frame", frame);
+	ns = pnh.param("m_ns", ns);
 
 
 	bool selfTest = pnh.param("self_test", false);

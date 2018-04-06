@@ -52,14 +52,10 @@ include_directories(SYSTEM ${QHULL_INCLUDE_DIR})
 find_package( CGAL QUIET COMPONENTS
   Core
 )
-if ( NOT CGAL_FOUND )
-  message(STATUS "This project requires the CGAL library, and will not be compiled.")
-  return()
+include(${CGAL_USE_FILE})
 
-else()
-  include(${CGAL_USE_FILE})
-endif()
-
+find_package(PythonLibs REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
 
 catkin_python_setup()
 
@@ -94,6 +90,7 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${Boost_LIBRARIES}
   ${QHULL_LIBRARIES}
+  ${PYTHON_LIBRARIES}
 )
 if (CGAL_FOUND)
   target_link_libraries(${PROJECT_NAME} ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
@@ -115,6 +112,13 @@ target_link_libraries(visualize_raster_set
 add_executable(visualize_ellipsoidal_set src/nodes/visualize_ellipsoidal_set.cpp)
 add_dependencies(visualize_ellipsoidal_set ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(visualize_ellipsoidal_set
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+)
+
+add_executable(visualize_polytope_set src/nodes/visualize_polytope_set.cpp)
+add_dependencies(visualize_polytope_set ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(visualize_polytope_set
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )

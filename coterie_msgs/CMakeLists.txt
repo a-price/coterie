@@ -20,6 +20,7 @@ add_message_files(
   MultiArrayExtents.msg
   Point.msg
   PointSet.msg
+  PolytopeSet.msg
   RasterSet.msg
 )
 

@@ -1,3 +1,11 @@
+#!/usr/bin/env python
+
+# Derived from http://cvxopt.org/examples/book/ellipsoids.html
+
+# How to call from C: http://cvxopt.org/examples/other/embed_cvxopt.html
+
+
+
 import cvxopt as cvx
 import sympy as sp
 import numpy as np
@@ -14,6 +22,12 @@ import numpy.linalg as linalg
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+from coterie_msgs.msg import *
+import rospy
+import rospy.numpy_msg
+
+EllipsoidalSet = rospy.numpy_msg.numpy_msg(EllipsoidalSet)
+PolytopeSet  = rospy.numpy_msg.numpy_msg(PolytopeSet)
 
 sp.init_printing()
 
@@ -162,7 +176,7 @@ class InscribedEllipsoid:
 
         return f, Df, H
 
-dimension = 3
+dimension = 1
 
 if dimension == 2:
     # Extreme points (with first one appended at the end)
@@ -251,3 +265,54 @@ elif dimension == 3:
     ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='b', alpha=0.2)
     # ax.plot([smin[0], smax[0]], [smin[1], smax[1]], zs=[smin[2], smax[2]], linewidth=2, color='r')
     plt.show()
+
+
+def handle_inclusion(msg):
+    # print(msg)
+    print(len(msg.support_planes))
+    G = []
+    print(type(msg.support_planes[0].normal.data))
+    print(msg.support_planes[0].normal.data[:])
+    print(msg.support_planes[0].distance)
+    print(np.append(msg.support_planes[0].normal.data, msg.support_planes[0].distance)[:])
+    for k in range(len(msg.support_planes)):
+        # G.append([msg.support_planes[k].normal.data[0], msg.support_planes[k].normal.data[1], msg.support_planes[k].normal.data[2], msg.support_planes[k].distance])
+        G.append(np.append(msg.support_planes[k].normal.data, msg.support_planes[k].distance)[:])
+        # G.append(np.append(msg.support_planes[k].normal.data / msg.support_planes[k].distance, 1.0)[:])
+
+    ell = InscribedEllipsoid(3, G)
+
+    sol = cvx.solvers.cp(ell)
+    x = sol['x']
+    L = np.matrix([[x[0], 0.0, 0.0],
+                   [x[1], x[2], 0.0],
+                   [x[3], x[4], x[5]]])
+    L = cvx.matrix(L)
+    c = cvx.matrix([x[6], x[7], x[8]])
+
+    print(L)
+    print(c)
+
+    # Not sure why this needs to be inverted. Either this or the visualizer is backwards
+    A = linalg.inv(np.array(L * L.T))
+    center = np.array(c).squeeze()
+
+    E = EllipsoidalSet()
+    E.c.data = center
+    E.A = A.flatten()
+
+    print(E)
+
+    pub.publish(E)
+
+
+pub = rospy.Publisher('inscribed_ellipsoid', EllipsoidalSet, queue_size=1, latch=True)
+
+
+def run_server():
+    rospy.init_node('included_ellipsoid')
+    s = rospy.Subscriber('polytope', PolytopeSet, handle_inclusion)
+    rospy.spin()
+
+if __name__ == "__main__":
+    run_server()
