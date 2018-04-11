@@ -176,7 +176,7 @@ class InscribedEllipsoid:
 
         return f, Df, H
 
-dimension = 1
+dimension = 2
 
 if dimension == 2:
     # Extreme points (with first one appended at the end)
@@ -243,7 +243,7 @@ elif dimension == 3:
     print(L)
     print(c)
 
-    A = np.array(L*L.T)
+    A = linalg.inv(np.array(L*L.T))
     center = np.array(c).squeeze()
 
     # find the rotation matrix and radii of the axes
