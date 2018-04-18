@@ -85,7 +85,7 @@ template<int DIM,
 bool contains(const AABB<DIM, PointT>& outer, const AABB<DIM, PointT>& inner)
 {
 	bool isSubset = true;
-	for (size_t d = 0; d < DIM; ++d)
+	for (int d = 0; d < outer.dimension; ++d)
 	{
 		isSubset = isSubset && (outer.min[d] <= inner.min[d]) && (inner.max[d] <= outer.max[d]);
 	}
