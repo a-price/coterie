@@ -39,6 +39,7 @@
 #define VISUALIZE_POLYTOPE_SET_HPP
 
 #include "coterie/PolytopeSet.hpp"
+#include "coterie/PointSet.hpp"
 
 #include <visualization_msgs/Marker.h>
 
@@ -46,6 +47,20 @@
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/convex_hull_3.h>
 #include <vector>
+
+
+typedef CGAL::Exact_predicates_inexact_constructions_kernel  K;
+typedef CGAL::Polyhedron_3<K>                     Polyhedron_3;
+namespace CGAL
+{
+
+::Polyhedron_3::Facet_const_iterator begin(const ::Polyhedron_3 &poly)
+{ return poly.facets_begin(); }
+
+::Polyhedron_3::Facet_const_iterator end(const ::Polyhedron_3 &poly)
+{ return poly.facets_end(); }
+
+}
 
 namespace coterie
 {
@@ -58,17 +73,102 @@ template<int DIM,
 visualization_msgs::Marker visualizePosition(const PolytopeSet<DIM, PointT, RosterT> &ps,
                                              const PointT &scale = PointT::Ones())
 {
-//	typedef CGAL::Exact_predicates_inexact_constructions_kernel  K;
-//	typedef CGAL::Polyhedron_3<K>                     Polyhedron_3;
-//	typedef K::Point_3                                Point_3;
-//	typedef K::Segment_3                              Segment_3;
-//	typedef K::Triangle_3                             Triangle_3;
+	typedef CGAL::Exact_predicates_inexact_constructions_kernel  K;
+	typedef CGAL::Polyhedron_3<K>                     Polyhedron_3;
+	typedef K::Point_3                                Point_3;
+	typedef K::Segment_3                              Segment_3;
+	typedef K::Triangle_3                             Triangle_3;
 
-//	std::vector<Point_3> points;
-//	for (const PointT& pt : ps.supportPoints.members)
-//	{
-//		points.push_back(pt);
-//	}
+
+
+	std::vector<Point_3> points;
+	for (const auto& pt : ps.supportPoints.members)
+	{
+		points.emplace_back(Point_3(pt[0], pt[1], pt[2]));
+	}
+
+	CGAL::Object obj;
+	visualization_msgs::Marker m;
+
+	CGAL::convex_hull_3(points.begin(), points.end(), obj);
+
+	if(const Point_3* p = CGAL::object_cast<Point_3>(&obj))
+	{
+		std::cout << "Point " << *p << std::endl;
+	}
+	else if(const Segment_3* s = CGAL::object_cast<Segment_3>(&obj))
+	{
+		std::cout << "Segment " << *s << std::endl;
+	}
+	else if(const Triangle_3* t = CGAL::object_cast<Triangle_3>(&obj))
+	{
+		std::cout << "Triangle " << *t << std::endl;
+	}
+	else  if(const Polyhedron_3* poly = CGAL::object_cast<Polyhedron_3>(&obj))
+	{
+		std::cout << "The convex hull contains " << poly->size_of_vertices() << " vertices" << std::endl;
+
+		for (auto facet : *poly)
+		{
+			Polyhedron_3::Halfedge_handle h = facet.halfedge();
+			int vertex_count = 0;
+			do
+			{
+				Point_3 v = h->vertex()->point();
+				geometry_msgs::Point pt;
+				pt.x = v.x(); pt.y = v.y(); pt.z = v.z();
+				m.points.push_back(pt);
+				h = h->next();
+				++vertex_count;
+			} while (h != facet.halfedge());
+
+			std_msgs::ColorRGBA rgb;
+			rgb.a = 0.5;
+			float r = rand() / (float)RAND_MAX;
+			float g = rand() / (float)RAND_MAX;
+			float b = rand() / (float)RAND_MAX;
+			float norm = sqrt(r*r+g*g+b*b);
+			rgb.r = r/norm;
+			rgb.g = g/norm;
+			rgb.b = b/norm;
+//			rgb.r = 0.0; //rand() / (float)RAND_MAX;
+//			float g = rand() / (float)RAND_MAX;
+//			float b = rand() / (float)RAND_MAX;
+//			rgb.g = g/(g*g+b*b);
+//			rgb.b = b/(g*g+b*b);
+			m.colors.push_back(rgb);
+
+			if (3 != vertex_count)
+				std::cout << "Facet contains " << vertex_count << " vertices." << std::endl;
+		}
+
+	}
+	else
+	{
+		std::cout << "something else"<< std::endl;
+	}
+
+	m.ns = "position_belief";
+	m.id = 0;
+	m.type = visualization_msgs::Marker::TRIANGLE_LIST;
+	m.action = visualization_msgs::Marker::ADD;
+	m.frame_locked = true;
+	m.pose.position.x = 0;
+	m.pose.position.y = 0;
+	m.pose.position.z = 0;
+	m.pose.orientation.x = 0;
+	m.pose.orientation.y = 0;
+	m.pose.orientation.z = 0;
+	m.pose.orientation.w = 1;
+	m.scale.x = 1;
+	m.scale.y = 1;
+	m.scale.z = 1;
+	m.color.a = 0.5; // Don't forget to set the alpha!
+	m.color.r = 0.0;
+	m.color.g = 0.0;
+	m.color.b = 1.0;
+
+	return m;
 }
 
 } // namespace coterie

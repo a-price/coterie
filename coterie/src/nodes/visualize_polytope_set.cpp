@@ -90,7 +90,7 @@ bool checkSizes(const coterie_msgs::PolytopeSetConstPtr ps, const int dim)
 
 	if (dim != size)
 	{
-		ROS_ERROR_STREAM("R2 Requires 2 dimensions: <x,y>. Message contains " << size << ".");
+		ROS_ERROR_STREAM("Requires " << dim << " dimensions: <x,y,...>. Message contains " << size << ".");
 		return false;
 	}
 
