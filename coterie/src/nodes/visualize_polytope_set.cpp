@@ -58,15 +58,6 @@ typedef K::Segment_3                              Segment_3;
 typedef K::Triangle_3                             Triangle_3;
 typedef CGAL::Surface_mesh<Point_3> Surface_mesh;
 
-namespace CGAL
-{
-::Polyhedron_3::Facet_const_iterator begin(const ::Polyhedron_3 &poly)
-{ return poly.facets_begin(); }
-
-::Polyhedron_3::Facet_const_iterator end(const ::Polyhedron_3 &poly)
-{ return poly.facets_end(); }
-}
-
 std::string frame = "World";
 std::string ns = "position_belief";
 

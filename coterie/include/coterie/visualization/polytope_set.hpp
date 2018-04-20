@@ -79,7 +79,10 @@ visualization_msgs::Marker visualizePosition(const PolytopeSet<DIM, PointT, Rost
 	typedef K::Segment_3                              Segment_3;
 	typedef K::Triangle_3                             Triangle_3;
 
-
+	// Random number generation
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> interval(1.0f, std::nextafter(2.0f, std::numeric_limits<float>::max()));
 
 	std::vector<Point_3> points;
 	for (const auto& pt : ps.supportPoints.members)
@@ -106,8 +109,6 @@ visualization_msgs::Marker visualizePosition(const PolytopeSet<DIM, PointT, Rost
 	}
 	else  if(const Polyhedron_3* poly = CGAL::object_cast<Polyhedron_3>(&obj))
 	{
-		std::cout << "The convex hull contains " << poly->size_of_vertices() << " vertices" << std::endl;
-
 		for (auto facet : *poly)
 		{
 			Polyhedron_3::Halfedge_handle h = facet.halfedge();
@@ -124,9 +125,9 @@ visualization_msgs::Marker visualizePosition(const PolytopeSet<DIM, PointT, Rost
 
 			std_msgs::ColorRGBA rgb;
 			rgb.a = 0.5;
-			float r = rand() / (float)RAND_MAX;
-			float g = rand() / (float)RAND_MAX;
-			float b = rand() / (float)RAND_MAX;
+			float r = interval(gen);
+			float g = interval(gen);
+			float b = interval(gen);
 			float norm = sqrt(r*r+g*g+b*b);
 			rgb.r = r/norm;
 			rgb.g = g/norm;
