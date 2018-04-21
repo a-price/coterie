@@ -43,6 +43,7 @@
 #include "PolytopeSet.hpp"
 #include "RasterSet.hpp"
 #include "NonparametricSets.hpp"
+#include "EllipsoidSolver.h"
 
 namespace coterie
 {
@@ -99,6 +100,15 @@ template<int DIM,
 bool contains(const AABB<DIM, PointT>& outer, const EllipsoidalSet<DIM, PointT, MatrixT>& inner)
 {
 	return contains(outer, inner.getAABB());
+}
+
+
+template<int DIM,
+	typename PointT=Eigen::Matrix<double, DIM, 1>,
+	typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
+bool contains(const EllipsoidalSet<DIM, PointT, MatrixT>& outer, const EllipsoidalSet<DIM, PointT, MatrixT>& inner)
+{
+	return EllipsoidSolver::getInstance().contains<DIM, PointT, MatrixT>(outer, inner);
 }
 
 template<int DIM,

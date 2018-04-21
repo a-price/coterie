@@ -43,7 +43,7 @@
 TEST(SubsetRelations, testPointSet)
 {
 	// Test unit circle
-	coterie::EllipsoidalSet<2> es(Eigen::Vector2d::Zero(), Eigen::Matrix2d::Identity());
+	auto es = coterie::EllipsoidalSet<2>::ARep(Eigen::Vector2d::Zero(), Eigen::Matrix2d::Identity());
 
 	coterie::PointSet<2> ps;
 	ps.members.insert({0.1,0.1});
@@ -78,7 +78,7 @@ TEST(SubsetRelations, testPointSet)
 TEST(SubsetRelations, testDynamicPointSet)
 {
 	// Test unit circle
-	coterie::EllipsoidalSet<coterie::Dynamic> es(Eigen::VectorXd::Zero(2), Eigen::MatrixXd::Identity(2,2));
+	auto es = coterie::EllipsoidalSet<coterie::Dynamic>::ARep(Eigen::VectorXd::Zero(2), Eigen::MatrixXd::Identity(2,2));
 
 	coterie::PointSet<coterie::Dynamic> ps(2);
 	ps.members.insert((Eigen::VectorXd(2) << 0.1,0.1).finished());
@@ -123,13 +123,13 @@ TEST(SubsetRelations, testEllipsoidInPolytope)
 	coterie::PolytopeSet<3> poly(ps);
 
 	// Test unit sphere
-	coterie::EllipsoidalSet<3> es(Eigen::Vector3d::Zero(), Eigen::Matrix3d::Identity());
+	auto es = coterie::EllipsoidalSet<3>::ARep(Eigen::Vector3d::Zero(), Eigen::Matrix3d::Identity());
 
 	ASSERT_TRUE(contains(poly, es));
 	ASSERT_TRUE(contains(poly.getAABB(), es));
 
 	// Create larger sphere (size = 3)
-	es = coterie::EllipsoidalSet<3>(Eigen::Vector3d::Zero(), 1.0/pow(3.0,2) * Eigen::Matrix3d::Identity());
+	es = coterie::EllipsoidalSet<3>::ARep(Eigen::Vector3d::Zero(), 1.0/pow(3.0,2) * Eigen::Matrix3d::Identity());
 
 	ASSERT_FALSE(contains(poly, es));
 	ASSERT_FALSE(contains(poly.getAABB(), es));
@@ -143,7 +143,7 @@ TEST(SubsetRelations, testEllipsoidInRaster)
 	coterie::RasterSet<N> rs(shape, bounds);
 
 	// Test unit sphere
-	coterie::EllipsoidalSet<3> es(Eigen::Vector3d::Zero(), Eigen::Matrix3d::Identity());
+	auto es = coterie::EllipsoidalSet<3>::ARep(Eigen::Vector3d::Zero(), Eigen::Matrix3d::Identity());
 
 	const unsigned nElements = rs.data.num_elements();
 	for (size_t i = 0; i < nElements; ++i)
@@ -192,12 +192,12 @@ TEST(SubsetRelations, testAABBInConvex)
 	ASSERT_EQ(16, aabb.getCorners().size());
 
 	// Create larger sphere (size = 2)
-	coterie::EllipsoidalSet<4> es(Eigen::Vector4d::Zero(), Eigen::Matrix4d::Identity());
+	auto es = coterie::EllipsoidalSet<4>::ARep(Eigen::Vector4d::Zero(), Eigen::Matrix4d::Identity());
 
 	ASSERT_TRUE(contains(es, aabb));
 	ASSERT_FALSE(contains(aabb, es));
 
-	es = coterie::EllipsoidalSet<4>(Eigen::Vector4d::Zero(), 1.0/pow(0.4999,2) * Eigen::Matrix4d::Identity());
+	es = coterie::EllipsoidalSet<4>::ARep(Eigen::Vector4d::Zero(), 1.0/pow(0.4999,2) * Eigen::Matrix4d::Identity());
 
 	ASSERT_FALSE(contains(es, aabb));
 	ASSERT_TRUE(contains(aabb, es));

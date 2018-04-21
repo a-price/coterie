@@ -5,7 +5,7 @@ project(coterie)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 include(AIMMacros)
 
-use_cxx_standard(11)
+use_cxx_standard(14)
 
 use_strict_compile_flags()
 
@@ -49,13 +49,13 @@ use_openmp()
 find_package(Qhull REQUIRED)
 include_directories(SYSTEM ${QHULL_INCLUDE_DIR})
 
-find_package( CGAL QUIET COMPONENTS
+find_package(CGAL REQUIRED COMPONENTS
   Core
 )
 include(${CGAL_USE_FILE})
 
 find_package(PythonLibs REQUIRED)
-include_directories(${PYTHON_INCLUDE_DIRS})
+include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
 catkin_python_setup()
 
@@ -72,7 +72,7 @@ catkin_package(
  INCLUDE_DIRS include ${EIGEN3_INCLUDE_DIRS}
  LIBRARIES ${PROJECT_NAME} ${QHULL_LIBRARIES}
  CATKIN_DEPENDS coterie_msgs roscpp roslib std_msgs visualization_msgs
-#  DEPENDS system_lib
+ DEPENDS CGAL QHULL Boost
 )
 
 ###########
@@ -86,15 +86,16 @@ include_directories(include)
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/template_instantiations.cpp
+  src/${PROJECT_NAME}/EllipsoidSolver.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${Boost_LIBRARIES}
   ${QHULL_LIBRARIES}
   ${PYTHON_LIBRARIES}
+  ${CGAL_LIBRARIES}
+  ${CGAL_3RD_PARTY_LIBRARIES}
 )
-if (CGAL_FOUND)
-  target_link_libraries(${PROJECT_NAME} ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
-endif()
+
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

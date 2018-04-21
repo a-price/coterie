@@ -57,41 +57,29 @@ public:
 	static constexpr bool is_always_convex = true;
 
 	PointT c;
-	MatrixT Q;
-	Eigen::LLT<MatrixT> L; // Cholesky decomposition
+	MatrixT A;
+	Eigen::LLT<MatrixT> chol; // Cholesky decomposition
+
+	MatrixT L;
 	MatrixT Linv;
 
-	/**
-	 * @brief EllipsoidalSet
-	 * @param center Center of the ellipsoid
-	 * @param covar SPD (not SPSD!) covariance matrix
-	 */
-	ENABLE_IF_STATIC_DIMENSION
-	EllipsoidalSet(const PointT& center, const MatrixT& covar)
-	    : Set<DIM, PointT>(),
-	      c(center),
-	      Q(covar),
-	      L(covar),
-	      Linv(MatrixT(L.matrixL()).inverse())
+	static inline
+	EllipsoidalSet<DIM, PointT, MatrixT> ARep(const PointT& center, const MatrixT& A)
 	{
-
+		return EllipsoidalSet<DIM, PointT, MatrixT>(center, A);
 	}
 
-	ENABLE_IF_DYNAMIC_DIMENSION
-	EllipsoidalSet(const PointT& center, const MatrixT& covar)
-	    : Set<DIM, PointT>(center.size()),
-	      c(center),
-	      Q(covar),
-	      L(covar),
-	      Linv(MatrixT(L.matrixL()).inverse())
+	static inline
+	EllipsoidalSet<DIM, PointT, MatrixT> BRep(const PointT& center, const MatrixT& B)
 	{
-
+		return EllipsoidalSet<DIM, PointT, MatrixT>(center, (B*B.transpose()).inverse());
 	}
 
 	virtual bool contains(const PointT& q) const override
 	{
 		PointT dist = q-c;
-		return (dist.transpose() * Q * dist) <= 1.0;
+		return (dist.transpose() * A * dist) <= 1.0;
+//		return (dist.transpose() * L).norm() <= 1.0;
 	}
 
 	virtual AABB<DIM, PointT> getAABB() const override
@@ -135,6 +123,10 @@ public:
 		return PointT::Zero(Set<DIM, PointT>::dimension);
 	}
 
+	MatrixT semiAxes() const;
+
+	inline MatrixT B() const { return Linv.transpose(); }
+
 	// Line segment connects (first*nHat, second*nHat)
 	std::pair<double, double> projectToCenteredRay(const Eigen::Matrix<double, DIM, 1>& nHat) const
 	{
@@ -144,6 +136,73 @@ public:
 		double wNorm = w.norm();
 		return {s0-wNorm, s0+wNorm};
 	}
+
+protected:
+	/**
+	 * @brief EllipsoidalSet
+	 * @param center Center of the ellipsoid
+	 * @param covar SPD (not SPSD!) ellipsoid matrix
+	 */
+	ENABLE_IF_STATIC_DIMENSION
+	EllipsoidalSet(const PointT& center, const MatrixT& Amat)
+		: Set<DIM, PointT>(),
+		  c(center),
+		  A(Amat),
+		  chol(Amat),
+		  L(chol.matrixL()),
+		  Linv(L.inverse())
+	{
+
+	}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	EllipsoidalSet(const PointT& center, const MatrixT& Amat)
+		: Set<DIM, PointT>(center.size()),
+		  c(center),
+		  A(Amat),
+		  chol(Amat),
+		  L(chol.matrixL()),
+		  Linv(L.inverse())
+	{
+
+	}
+
+public:
+
+//	ENABLE_IF_STATIC_DIMENSION
+//	EllipsoidalSet(const EllipsoidalSet<DIM, PointT, MatrixT>& other)
+//		: Set<DIM, PointT>(),
+//		  c(other.c),
+//		  A(other.A),
+//		  chol(other.chol),
+//		  L(other.L),
+//		  Linv(other.Linv)
+//	{}
+//
+//	ENABLE_IF_DYNAMIC_DIMENSION
+//	EllipsoidalSet(const EllipsoidalSet<DIM, PointT, MatrixT>& other)
+//		: Set<DIM, PointT>(other.c.size()),
+//		  c(other.c),
+//		  A(other.A),
+//		  chol(other.chol),
+//		  L(other.L),
+//		  Linv(other.Linv)
+//	{}
+//
+//	EllipsoidalSet<DIM, PointT, MatrixT>& operator=(EllipsoidalSet<DIM, PointT, MatrixT> rhs)
+//	{
+//		swap(*this, rhs);
+//		return *this;
+//	}
+//	friend void swap(EllipsoidalSet<DIM, PointT, MatrixT>& lhs, EllipsoidalSet<DIM, PointT, MatrixT>& rhs)
+//	{
+//		using std::swap;
+//		swap(lhs.c, rhs.c);
+//		swap(lhs.A, rhs.A);
+//		swap(lhs.chol, rhs.chol);
+//		swap(lhs.L, rhs.L);
+//		swap(lhs.Linv, rhs.Linv);
+//	}
 };
 
 }

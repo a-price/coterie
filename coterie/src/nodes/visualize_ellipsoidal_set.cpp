@@ -78,7 +78,7 @@ void r2Callback(const coterie_msgs::EllipsoidalSetConstPtr ps)
 	Eigen::Vector2d c = Eigen::Map<const Eigen::Vector2d>(ps->c.data.data());
 	Eigen::Matrix2d A = Eigen::Map<const Eigen::Matrix2d>(ps->A.data());
 
-	coterie::EllipsoidalSet<2> ell(c, A);
+	auto ell = coterie::EllipsoidalSet<2>::ARep(c, A);
 
 	visualization_msgs::Marker m = coterie::visualizePosition<2>(ell);
 
@@ -95,7 +95,7 @@ void r3Callback(const coterie_msgs::EllipsoidalSetConstPtr ps)
 	Eigen::Vector3d c = Eigen::Map<const Eigen::Vector3d>(ps->c.data.data());
 	Eigen::Matrix3d A = Eigen::Map<const Eigen::Matrix3d>(ps->A.data());
 
-	coterie::EllipsoidalSet<3> ell(c, A);
+	auto ell = coterie::EllipsoidalSet<3>::ARep(c, A);
 
 	visualization_msgs::Marker m = coterie::visualizePosition<3>(ell);
 
@@ -120,7 +120,7 @@ void se2Callback(const coterie_msgs::EllipsoidalSetConstPtr ps)
 	Eigen::Vector3d c = Eigen::Map<const Eigen::Vector3d>(ps->c.data.data());
 	Eigen::Matrix3d A = Eigen::Map<const Eigen::Matrix3d>(ps->A.data());
 
-	coterie::EllipsoidalSet<3> ell(c, A);
+	auto ell = coterie::EllipsoidalSet<3>::ARep(c, A);
 	// TODO: PoseWithCovariance
 }
 
@@ -131,7 +131,7 @@ void se3Callback(const coterie_msgs::EllipsoidalSetConstPtr ps)
 	Eigen::Matrix<double, 6, 1> c = Eigen::Map<const Eigen::Matrix<double, 6, 1>>(ps->c.data.data());
 	Eigen::Matrix<double, 6, 6> A = Eigen::Map<const Eigen::Matrix<double, 6, 6>>(ps->A.data());
 
-	coterie::EllipsoidalSet<6> ell(c, A);
+	auto ell = coterie::EllipsoidalSet<6>::ARep(c, A);
 	// TODO: PoseWithCovariance
 }
 
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
 			ptr->c.data.push_back(ell.c[i]);
 			for (int j = 0; j < 3; ++j)
 			{
-				ptr->A.push_back(ell.Q(i, j));
+				ptr->A.push_back(ell.A(i, j));
 			}
 		}
 

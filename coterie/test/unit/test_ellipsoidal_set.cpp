@@ -49,7 +49,7 @@ constexpr int coterie::Set<DIM, PointT>::dimension;
 TEST(EllipsoidalSet, testContains)
 {
 	// Test unit circle
-	coterie::EllipsoidalSet<2> es(Eigen::Vector2d::Zero(), Eigen::Matrix2d::Identity());
+	auto es = coterie::EllipsoidalSet<2>::ARep(Eigen::Vector2d::Zero(), Eigen::Matrix2d::Identity());
 
 	ASSERT_TRUE(es.contains({0,0}));
 	ASSERT_TRUE(es.contains({0.5,-0.5}));
@@ -70,7 +70,7 @@ TEST(EllipsoidalSet, testContains)
 
 	// Squashed ellipsoid
 	Eigen::Matrix2d Q; Q << 1.0/pow(2.0,2), 0, 0, 1.0/pow(0.5,2);
-	es = coterie::EllipsoidalSet<2>(Eigen::Vector2d::Zero(), Q);
+	es = coterie::EllipsoidalSet<2>::ARep(Eigen::Vector2d::Zero(), Q);
 
 	ASSERT_TRUE(es.contains({0,0}));
 	ASSERT_TRUE(es.contains({0.5,-0.25}));
@@ -80,7 +80,7 @@ TEST(EllipsoidalSet, testContains)
 
 	// Random Ellipsoid
 	Eigen::Matrix2d M = Eigen::Matrix2d::Identity() + Eigen::Matrix2d::Random();
-	es = coterie::EllipsoidalSet<2>(10.0*Eigen::Vector2d::Random(), 10.0*M*M.transpose());
+	es = coterie::EllipsoidalSet<2>::ARep(10.0*Eigen::Vector2d::Random(), 10.0*M*M.transpose());
 
 	ASSERT_TRUE(es.contains(es.c));
 
@@ -180,7 +180,7 @@ TEST(EllipsoidalSet, test_fit_internals)
 	std::cout << "Epsilon: " << ame.achieved_epsilon() << std::endl;
 	std::cout << "Eta: " << eta << std::endl;
 
-	coterie::EllipsoidalSet<-1> ell(c, A);
+	auto ell = coterie::EllipsoidalSet<-1>::ARep(c, A);
 
 	coterie::PointSet<-1> ps(d);
 	for (int i = 0; i < n; ++i)
@@ -248,6 +248,7 @@ void test_optimistic_fit()
 	ASSERT_TRUE(coterie::contains(ell, ps));
 
 }
+
 TEST(EllipsoidalSet, optimistic_fit)
 {
 	test_optimistic_fit<-1>();

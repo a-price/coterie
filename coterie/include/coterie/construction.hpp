@@ -144,7 +144,7 @@ EllipsoidalSet<DIM, PointT, MatrixT> minVolumeEnclosingEllipsoid(const PointSet<
 	}
 
 	MatrixT A = eigvecs * eigvals.asDiagonal() * eigvecs.inverse();
-	coterie::EllipsoidalSet<DIM, PointT, MatrixT> ell(c, A);
+	auto ell = coterie::EllipsoidalSet<DIM, PointT, MatrixT>::ARep(c, A);
 
 	return ell;
 }

@@ -56,7 +56,7 @@ visualization_msgs::Marker visualizePosition(const EllipsoidalSet<DIM, PointT, M
 {
 	// NB: computeDirect for 2x2 or 3x3 matrices
 	Eigen::SelfAdjointEigenSolver<MatrixT> eigSolver;
-	eigSolver.computeDirect(es.Q);
+	eigSolver.computeDirect(es.A);
 
 	// Handle dimensions other than 3
 	MatrixT V = eigSolver.eigenvectors();
