@@ -1,0 +1,4 @@
+- git:
+    local-name: rasd_aim_common
+    uri: ssh://git@atas-gitb.gtri.gatech.edu:16022/kdr/rasd_aim_common.git
+    version: master

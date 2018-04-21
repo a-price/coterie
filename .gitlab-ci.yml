@@ -34,10 +34,11 @@ stages:
     - catkin_make -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON run_tests && catkin_test_results
     - gcovr -r .
 
-build_indigo:
-  <<: *job_definition
-  image: kdr/test_coterie:indigo
-
 build_kinetic:
   <<: *job_definition
   image: kdr/test_coterie:kinetic
+
+build_lunar:
+  <<: *job_definition
+  image: kdr/test_coterie:lunar
+
