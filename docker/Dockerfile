@@ -62,6 +62,8 @@ ADD ./ /root/catkin_ws/src/coterie
 RUN apt-get -yq update && \
     DEBIAN_FRONTEND=noninteractive apt-get -yqq upgrade && \
     DEBIAN_FRONTEND=noninteractive apt-get -yqq install \
+    ssh \
+    git \
     python-pip \
     ccache && \
     cd ~/catkin_ws && \
