@@ -138,6 +138,8 @@ visualization_msgs::Marker visualizePosition(const PolytopeSet<DIM, PointT, Rost
 //			rgb.g = g/(g*g+b*b);
 //			rgb.b = b/(g*g+b*b);
 			m.colors.push_back(rgb);
+			m.colors.push_back(rgb);
+			m.colors.push_back(rgb);
 
 			if (3 != vertex_count)
 				std::cout << "Facet contains " << vertex_count << " vertices." << std::endl;
