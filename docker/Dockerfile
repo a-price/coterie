@@ -55,8 +55,14 @@ RUN cd && \
     mkdir -p catkin_ws/src && cd catkin_ws/src && \
     source /opt/ros/%ROS_VERSION%/setup.bash && \
     catkin_init_workspace 
-COPY --from=getter /root/catkin_ws/src/* /root/catkin_ws/src/
-ADD ./ /root/catkin_ws/src/coterie
+
+# Copy over the cloned source dependencies and package for rosdep
+# * This keeps the apt stuff from getting called every time any file in this repo is changed.
+COPY --from=getter /root/catkin_ws/src /root/catkin_ws/src/
+RUN mkdir -p ~/catkin_ws/src/coterie/coterie_msgs
+RUN mkdir -p ~/catkin_ws/src/coterie/coterie
+ADD ./coterie_msgs/package.xml /root/catkin_ws/src/coterie/coterie_msgs/
+ADD ./coterie/package.xml /root/catkin_ws/src/coterie/coterie/
 
 # Install missing rosdeps
 RUN apt-get -yq update && \
@@ -67,6 +73,7 @@ RUN apt-get -yq update && \
     python-pip \
     ccache && \
     cd ~/catkin_ws && \
+    rosdep update && \
     rosdep install --from-paths src --ignore-src -r -y && \
     rm -rf /var/lib/apt/lists/*
 
@@ -76,9 +83,12 @@ RUN export PATH=/usr/lib/ccache:$PATH
 # Install cvxpy tools
 RUN pip install --upgrade pip cvxpy cvxopt
 
+ADD ./ /root/catkin_ws/src/coterie
+
 # Build and test the project
 RUN cd ~/catkin_ws && \
     source /opt/ros/`rosversion -d`/setup.bash && \
     catkin_make && \
+    source ~/catkin_ws/devel/setup.bash && \
     catkin_make run_tests && \
     catkin_test_results
