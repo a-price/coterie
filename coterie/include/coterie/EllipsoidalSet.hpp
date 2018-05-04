@@ -167,43 +167,14 @@ protected:
 
 	}
 
-public:
-
-//	ENABLE_IF_STATIC_DIMENSION
-//	EllipsoidalSet(const EllipsoidalSet<DIM, PointT, MatrixT>& other)
-//		: Set<DIM, PointT>(),
-//		  c(other.c),
-//		  A(other.A),
-//		  chol(other.chol),
-//		  L(other.L),
-//		  Linv(other.Linv)
-//	{}
-//
-//	ENABLE_IF_DYNAMIC_DIMENSION
-//	EllipsoidalSet(const EllipsoidalSet<DIM, PointT, MatrixT>& other)
-//		: Set<DIM, PointT>(other.c.size()),
-//		  c(other.c),
-//		  A(other.A),
-//		  chol(other.chol),
-//		  L(other.L),
-//		  Linv(other.Linv)
-//	{}
-//
-//	EllipsoidalSet<DIM, PointT, MatrixT>& operator=(EllipsoidalSet<DIM, PointT, MatrixT> rhs)
-//	{
-//		swap(*this, rhs);
-//		return *this;
-//	}
-//	friend void swap(EllipsoidalSet<DIM, PointT, MatrixT>& lhs, EllipsoidalSet<DIM, PointT, MatrixT>& rhs)
-//	{
-//		using std::swap;
-//		swap(lhs.c, rhs.c);
-//		swap(lhs.A, rhs.A);
-//		swap(lhs.chol, rhs.chol);
-//		swap(lhs.L, rhs.L);
-//		swap(lhs.Linv, rhs.Linv);
-//	}
 };
+
+extern template class EllipsoidalSet<1>;
+extern template class EllipsoidalSet<2>;
+extern template class EllipsoidalSet<3>;
+extern template class EllipsoidalSet<4>;
+extern template class EllipsoidalSet<6>;
+extern template class EllipsoidalSet<-1>;
 
 }
 

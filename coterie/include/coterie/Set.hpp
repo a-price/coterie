@@ -229,7 +229,7 @@ public:
 				max[d] = q[d];
 			}
 		}
-		return false;
+		return !isInside;
 	}
 
 	PointT getCenter() const
@@ -262,6 +262,12 @@ static AABB<DIM, PointT> operator+(const AABB<DIM, PointT>& aabb, const PointT& 
 	return newBB;
 }
 
+extern template class AABB<1>;
+extern template class AABB<2>;
+extern template class AABB<3>;
+extern template class AABB<4>;
+extern template class AABB<6>;
+extern template class AABB<-1>;
 
 }
 

@@ -206,6 +206,13 @@ AABB<DIM, PointT> PointSet<DIM, PointT, RosterT>::getAABB() const
 	return PointSetSpecializations<DIM, PointT, RosterT>::getAABB(members, Set<DIM, PointT>::dimension);
 }
 
+extern template class PointSet<1>;
+extern template class PointSet<2>;
+extern template class PointSet<3>;
+extern template class PointSet<4>;
+extern template class PointSet<6>;
+extern template class PointSet<-1>;
+
 }
 
 #endif // POINTSET_H

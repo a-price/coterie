@@ -49,6 +49,13 @@ namespace coterie
 template<int DIM, typename PointT>
 constexpr int Set<DIM, PointT>::dimension;
 
+template class AABB<1>;
+template class AABB<2>;
+template class AABB<3>;
+template class AABB<4>;
+template class AABB<6>;
+template class AABB<-1>;
+
 template class PointSet<1>;
 template class PointSet<2>;
 template class PointSet<3>;

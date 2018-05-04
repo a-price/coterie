@@ -262,6 +262,13 @@ bool PolytopeSet<DIM, PointT, RosterT>::qhull(const PointSet<DIM, PointT, Roster
 	return true;
 }
 
+extern template class PolytopeSet<1>;
+extern template class PolytopeSet<2>;
+extern template class PolytopeSet<3>;
+extern template class PolytopeSet<4>;
+extern template class PolytopeSet<6>;
+extern template class PolytopeSet<-1>;
+
 }
 
 #endif // POLYTOPESET_HPP

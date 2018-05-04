@@ -440,6 +440,12 @@ Index<DIM> getCellFromPoint(const PointT& point, const Shape<DIM>& shape, const 
 	return idx;
 }
 
+extern template class RasterSet<1>;
+extern template class RasterSet<2>;
+extern template class RasterSet<3>;
+extern template class RasterSet<4>;
+extern template class RasterSet<6>;
+
 }
 
 #endif // RASTERSET_HPP
