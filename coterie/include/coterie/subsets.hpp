@@ -108,6 +108,10 @@ template<int DIM,
 	typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
 bool contains(const EllipsoidalSet<DIM, PointT, MatrixT>& outer, const EllipsoidalSet<DIM, PointT, MatrixT>& inner)
 {
+	if (outer.c == inner.c && outer.A == inner.A)
+	{
+		return true;
+	}
 	return EllipsoidSolver::getInstance().contains<DIM, PointT, MatrixT>(outer, inner);
 }
 
