@@ -289,7 +289,7 @@ int main(int argc, char* argv[])
 		std::cerr << "Published " << marker.points.size() << " points." << std::endl;
 
 		coterie_msgs::PolytopeSetPtr ptr = coterie_msgs::PolytopeSetPtr(new coterie_msgs::PolytopeSet());
-		for (int i = 0; i < marker.points.size(); ++i)
+		for (size_t i = 0; i < marker.points.size(); ++i)
 		{
 			coterie_msgs::Point cp;
 			cp.data.push_back(marker.points[i].x);

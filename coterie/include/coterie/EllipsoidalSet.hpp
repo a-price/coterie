@@ -78,7 +78,7 @@ public:
 	virtual bool contains(const PointT& q) const override
 	{
 		PointT dist = q-c;
-		return (dist.transpose() * A * dist) <= 1.0;
+		return (dist.transpose() * A * dist).value() <= 1.0;
 //		return (dist.transpose() * L).norm() <= 1.0;
 	}
 
@@ -98,6 +98,8 @@ public:
 	}
 
 	virtual bool isConvex() const override { return true; }
+
+	virtual PointT centroid() const { return c; }
 
 	ENABLE_IF_STATIC_DIMENSION
 	inline AABB<DIM, PointT> initializeAABB() const

@@ -39,3 +39,7 @@ build_lunar:
   <<: *job_definition
   image: kdr/test_coterie:lunar
 
+build_melodic:
+  <<: *job_definition
+  image: kdr/test_coterie:melodic
+

@@ -72,11 +72,11 @@ visualization_msgs::Marker visualizePosition(const EllipsoidalSet<DIM, PointT, M
 	marker.type = visualization_msgs::Marker::SPHERE;
 	marker.action = visualization_msgs::Marker::ADD;
 	marker.frame_locked = true;
-	marker.pose.position.x = es.c[0] * scale.x();
-	marker.pose.position.y = es.c[1] * scale.y();
+	marker.pose.position.x = es.c[0] * scale[0];
+	marker.pose.position.y = es.c[1] * scale[1];
 	if (DIM >= 3)
 	{
-		marker.pose.position.z = es.c[2] * scale.z();
+		marker.pose.position.z = es.c[2] * scale[2];
 	}
 	else
 	{
@@ -87,11 +87,11 @@ visualization_msgs::Marker visualizePosition(const EllipsoidalSet<DIM, PointT, M
 	marker.pose.orientation.z = q.z();
 	marker.pose.orientation.w = q.w();
 	// NB: 1/sqrt(v) is the semi-axis length, we want the full axis length
-	marker.scale.x = 2.0 * 1.0/sqrt(eigSolver.eigenvalues()[0]) * scale.x();
-	marker.scale.y = 2.0 *1.0/sqrt(eigSolver.eigenvalues()[1]) * scale.y();
+	marker.scale.x = 2.0 * 1.0/sqrt(eigSolver.eigenvalues()[0]) * scale[0];
+	marker.scale.y = 2.0 *1.0/sqrt(eigSolver.eigenvalues()[1]) * scale[1];
 	if (DIM >= 3)
 	{
-		marker.scale.z = 2.0 *1.0/sqrt(eigSolver.eigenvalues()[2]) * scale.z();
+		marker.scale.z = 2.0 *1.0/sqrt(eigSolver.eigenvalues()[2]) * scale[2];
 	}
 	else
 	{

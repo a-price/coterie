@@ -81,7 +81,7 @@ RUN apt-get -yq update && \
 RUN export PATH=/usr/lib/ccache:$PATH
 
 # Install cvxpy tools
-RUN pip install --upgrade pip cvxpy cvxopt
+RUN pip install --upgrade pip cvxpy==0.4.11 cvxopt
 
 ADD ./ /root/catkin_ws/src/coterie
 

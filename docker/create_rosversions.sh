@@ -1,5 +1,5 @@
 #!/bin/bash
-declare -a versionList=("kinetic" "lunar")
+declare -a versionList=("kinetic" "lunar") # "melodic")
 
 # Create the versioned dockerfiles
 for v in "${versionList[@]}"; do
@@ -9,6 +9,6 @@ done
 cd ..
 # Build and tag
 for v in "${versionList[@]}"; do
-    docker build -f docker/Dockerfile_$v -t kdr/test_coterie:$v --build-arg SSH_PRIVATE_KEY="$(cat ~/.ssh/id_rsa)" .
+    docker build $1 -f docker/Dockerfile_$v -t kdr/test_coterie:$v --build-arg SSH_PRIVATE_KEY="$(cat ~/.ssh/id_rsa)" .
 done
 cd -
