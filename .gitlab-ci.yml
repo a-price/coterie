@@ -26,8 +26,10 @@ stages:
     - ln -s ${CHECKOUT_DIR} coterie
     - cd ~/catkin_ws/
     - catkin_make -DCMAKE_BUILD_TYPE=Release
+    - source ~/catkin_ws/devel/setup.bash
     - catkin_make -DCMAKE_BUILD_TYPE=Release run_tests && catkin_test_results
     - catkin_make -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
+    - source ~/catkin_ws/devel/setup.bash
     - catkin_make -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON run_tests && catkin_test_results
     - gcovr -r .
 
@@ -38,8 +40,3 @@ build_kinetic:
 build_lunar:
   <<: *job_definition
   image: kdr/test_coterie:lunar
-
-build_melodic:
-  <<: *job_definition
-  image: kdr/test_coterie:melodic
-
