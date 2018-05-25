@@ -71,6 +71,7 @@ RUN apt-get -yq update && \
     ssh \
     git \
     python-pip \
+    gcovr \
     ccache && \
     cd ~/catkin_ws && \
     rosdep update && \
