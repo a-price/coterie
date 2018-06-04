@@ -88,7 +88,8 @@ public:
 		else
 		{
 			PyErr_Print();
-			throw std::runtime_error("Failed to load Python module " + moduleName);
+			const char* envROSPath = getenv("PYTHONPATH");
+			throw std::runtime_error("Failed to load Python module " + moduleName + " " + std::string(envROSPath));
 		}
 	}
 
