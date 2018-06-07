@@ -28,7 +28,8 @@ RUN echo "${SSH_PRIVATE_KEY}" > /root/.ssh/id_rsa && \
 
 # Get keys for target host
 RUN touch /root/.ssh/known_hosts
-RUN ssh-keyscan atas-gitb.gtri.gatech.edu >> /root/.ssh/known_hosts
+# NB: We must remap port 22 to 16022 due to ATAS modifications
+RUN ssh-keyscan -p 16022 atas-gitb.gtri.gatech.edu >> /root/.ssh/known_hosts
 
 # Set up ROS workspace and clone prerequisites
 RUN cd && \
