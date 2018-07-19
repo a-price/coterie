@@ -14,13 +14,14 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  AABB.msg
+  AABBSet.msg
   EllipsoidalSet.msg
   Hyperplane.msg
   MultiArrayExtents.msg
   Point.msg
   PointSet.msg
   PolytopeSet.msg
+  PolymorphicSet.msg
   RasterSet.msg
 )
 
