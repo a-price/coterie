@@ -5,6 +5,9 @@ import cvxpy
 import numpy as np
 import numpy.linalg as linalg
 
+if "0.4.11" != cvxpy.__version__:
+    raise RuntimeError('This module currently depends on cvxpy 0.4.11.')
+
 
 # TODO: Document why Q and not Qinv (A-form instead of B-form)
 def ellipse_quadratic(c, Q):
