@@ -93,6 +93,13 @@ public:
 
 	void initialize(const PointSet<DIM, PointT, RosterT>& inputSet)
 	{
+		// Check for lower-dimensional input.
+		if (Set<DIM, PointT>::dimension+1 > static_cast<int>(inputSet.members.size()))
+		{
+			supportPoints.members = inputSet.members;
+			return;
+		}
+
 		bool succeeded = qhull(inputSet);
 		if (!succeeded)
 		{
