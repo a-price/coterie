@@ -123,7 +123,7 @@ AABB<DIM, PointT> getActiveAABB(const RasterSetBase<DIM, PointT>& rsb, const Sto
 {
 	typedef typename RasterSetBase<DIM, PointT>::Index Index;
 	Index minIdx; std::fill(minIdx.begin(), minIdx.end(), std::numeric_limits<typename Index::value_type>::max());
-	Index maxIdx; std::fill(maxIdx.begin(), maxIdx.end(), std::numeric_limits<typename Index::value_type>::min());
+	Index maxIdx; std::fill(maxIdx.begin(), maxIdx.end(), std::numeric_limits<typename Index::value_type>::lowest());
 
 	// TODO: More efficient version of this
 	bool isEmpty = true;
@@ -147,7 +147,7 @@ AABB<DIM, PointT> getActiveAABB(const RasterSetBase<DIM, PointT>& rsb, const Sto
 	{
 		throw std::runtime_error("Operation not implemented.");
 //		aabb.min = PointT::Ones() * std::numeric_limits<typename PointT::Scalar>::max();
-//		aabb.max = PointT::Ones() * std::numeric_limits<typename PointT::Scalar>::min();
+//		aabb.max = PointT::Ones() * std::numeric_limits<typename PointT::Scalar>::lowest();
 	}
 	else
 	{
