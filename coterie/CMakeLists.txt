@@ -31,6 +31,15 @@ find_package(catkin REQUIRED COMPONENTS
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
+
+# NB: CGAL likes to clobber global variables, e.g. Boost_LIBRARIES, so make sure you include it first
+set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE CACHE BOOL "Disable CGAL complaints about performance flags.")
+set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL "Force CGAL to maintain CMAKE flags") # Only kinda works...
+find_package(CGAL REQUIRED COMPONENTS
+  Core
+)
+include(${CGAL_USE_FILE})
+
 find_package(Boost REQUIRED COMPONENTS
   filesystem
   iostreams
@@ -48,11 +57,6 @@ use_openmp()
 
 find_package(Qhull REQUIRED)
 include_directories(SYSTEM ${QHULL_INCLUDE_DIR})
-
-find_package(CGAL REQUIRED COMPONENTS
-  Core
-)
-include(${CGAL_USE_FILE})
 
 find_package(PythonLibs REQUIRED)
 include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
