@@ -41,6 +41,18 @@
 
 #include <gtest/gtest.h>
 
+// For debugging
+#ifndef VISUALIZE_TEST
+#define VISUALIZE_TEST false
+#endif
+
+#if VISUALIZE_TEST
+#include "coterie/visualization/point_set.h"
+#include "coterie/visualization/ellipsoidal_set.hpp"
+#include <visualization_msgs/MarkerArray.h>
+#include <ros/ros.h>
+#endif
+
 // Not sure why we need this and can't link to the one in template_instantiations
 template<int DIM, typename PointT>
 constexpr int coterie::Set<DIM, PointT>::dimension;
@@ -240,6 +252,21 @@ void test_optimistic_fit()
 
 	coterie::EllipsoidalSet<DIM> ell = coterie::minVolumeEnclosingEllipsoid<DIM>(ps);
 
+#if VISUALIZE_TEST
+	static ros::NodeHandle nh;
+	static ros::Publisher vizPub = nh.advertise<visualization_msgs::MarkerArray>("points", 1, true);
+	visualization_msgs::MarkerArray ma;
+	visualization_msgs::Marker marker = coterie::visualizePosition(ps);
+	marker.ns = "points"+std::to_string(d);
+	ma.markers.push_back(marker);
+	marker = coterie::visualizePosition(ell);
+	marker.ns = "ellipsoid"+std::to_string(d);
+	ma.markers.push_back(marker);
+	vizPub.publish(ma);
+	ros::spinOnce();
+	sleep(1);
+#endif
+
 	for (const PointT& m : ps.members)
 	{
 		ASSERT_TRUE(ell.contains(m));
@@ -259,7 +286,10 @@ TEST(EllipsoidalSet, optimistic_fit)
 
 int main(int argc, char **argv)
 {
-    ::testing::InitGoogleTest(&argc, argv);
+#if VISUALIZE_TEST
+	ros::init(argc, argv, "test_ellipsoidal_set");
+#endif
+	::testing::InitGoogleTest(&argc, argv);
 
-    return RUN_ALL_TESTS();
+	return RUN_ALL_TESTS();
 }

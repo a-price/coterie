@@ -133,7 +133,7 @@ void r3Callback(const coterie_msgs::PolytopeSetConstPtr ps)
 			int vertex_count = 0;
 			do
 			{
-				Point_3 v = h->vertex()->point();
+				const Point_3& v = h->vertex()->point();
 				geometry_msgs::Point pt;
 				pt.x = v.x(); pt.y = v.y(); pt.z = v.z();
 				m.points.push_back(pt);

@@ -72,29 +72,23 @@ template<>
 Eigen::Matrix<double, -1, -1> constructMatrix<-1, Eigen::Matrix<double, -1, -1>>(const int d)
 { return Eigen::Matrix<double, -1, -1>(d, d); }
 
-
 template<int DIM,
 	typename PointT=Eigen::Matrix<double, DIM, 1>,
-	typename MatrixT=Eigen::Matrix<double, DIM, DIM>,
 	typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>,
-		vector_less_than<DIM>,
-		Eigen::aligned_allocator<Eigen::Matrix<double, DIM, 1> > > >
-EllipsoidalSet<DIM, PointT, MatrixT> minVolumeEnclosingEllipsoid(const PointSet<DIM, PointT, RosterT>& ps)
+	                          vector_less_than<DIM>,
+	                          Eigen::aligned_allocator<Eigen::Matrix<double, DIM, 1> > >,
+	typename Point_list=std::vector<CGAL::Approximate_min_ellipsoid_d_traits_d<CGAL::Cartesian_d<double>, CGAL::MP_Float> > >
+void pointSetToPointList(const PointSet<DIM, PointT, RosterT>& ps, Point_list& P)
 {
 	using Kernel = CGAL::Cartesian_d<double>;
 	using ET = CGAL::MP_Float;
 	using Traits = CGAL::Approximate_min_ellipsoid_d_traits_d<Kernel,ET>;
 	using Point = Traits::Point;
-	using Point_list = std::vector<Point>;
-	using AME = CGAL::Approximate_min_ellipsoid_d<Traits>;
-
-	const double eps = 0.01;
+	using RT = Kernel::RT;
 
 	// TODO: There's got to be a way to do this zero-copy...
-	using RT = Kernel::RT;
 	std::vector<RT> coords(ps.dimension);
 
-	Point_list P;
 	for (const PointT& m : ps.members)
 	{
 		for(int i=0; i < ps.dimension; ++i)
@@ -105,6 +99,27 @@ EllipsoidalSet<DIM, PointT, MatrixT> minVolumeEnclosingEllipsoid(const PointSet<
 		Point p(ps.dimension, coords.begin(), coords.end() );
 		P.push_back(p);
 	}
+}
+
+template<int DIM,
+	typename PointT=Eigen::Matrix<double, DIM, 1>,
+	typename MatrixT=Eigen::Matrix<double, DIM, DIM>,
+	typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>,
+	                          vector_less_than<DIM>,
+	                          Eigen::aligned_allocator<Eigen::Matrix<double, DIM, 1> > > >
+EllipsoidalSet<DIM, PointT, MatrixT> minVolumeEnclosingEllipsoid(const PointSet<DIM, PointT, RosterT>& ps)
+{
+	using Kernel = CGAL::Cartesian_d<double>;
+	using ET = CGAL::MP_Float;
+	using Traits = CGAL::Approximate_min_ellipsoid_d_traits_d<Kernel,ET>;
+	using Point = Traits::Point;
+	using Point_list = std::vector<Point>;
+	using AME = CGAL::Approximate_min_ellipsoid_d<Traits>;
+
+	const double eps = 0.10;
+
+	Point_list P;
+	pointSetToPointList(ps, P);
 
 	Traits traits;
 	AME ame(eps, P.begin(), P.end(), traits);
@@ -131,6 +146,7 @@ EllipsoidalSet<DIM, PointT, MatrixT> minVolumeEnclosingEllipsoid(const PointSet<
 		for (int i = 0; i < ps.dimension; ++i)
 		{
 			double len = *axes++;
+			len *= (1.0+eps); // NB: According to the documentation, ame.is_valid should catch problems, but it doesn't. Inflate by eps.
 			double eigval = 1.0/(len*len);
 			eigvals[i] = eigval;
 

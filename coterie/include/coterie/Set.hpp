@@ -191,11 +191,11 @@ public:
 		return v;
 	}
 
-	std::vector<PointT> getCorners() const
+	std::vector<PointT, Eigen::aligned_allocator<PointT>> getCorners() const
 	{
 		// There will be 2^DIM corners to deal with
 		const int nCorners = (1 << Set<DIM, PointT>::dimension);
-		std::vector<PointT> corners(nCorners);
+		std::vector<PointT, Eigen::aligned_allocator<PointT>> corners(nCorners);
 		for (int perm = 0; perm < nCorners; ++perm)
 		{
 			PointT pt;
