@@ -108,10 +108,35 @@ template<int DIM,
 	typename MatrixT=Eigen::Matrix<double, DIM, DIM> >
 bool contains(const EllipsoidalSet<DIM, PointT, MatrixT>& outer, const EllipsoidalSet<DIM, PointT, MatrixT>& inner)
 {
+	// Ellipsoids are the same
 	if (outer.c == inner.c && outer.A == inner.A)
 	{
 		return true;
 	}
+
+	// The ellipsoid solver is expensive to call. Test the inner and outer approximations first
+	std::pair<double, double> outerApprox = outer.extremeRadii();
+	std::pair<double, double> innerApprox = inner.extremeRadii();
+	double distance = (outer.c - inner.c).norm();
+
+	// The smallest radius of the container is bigger than the distance plus the largest radius of the containee
+	if (outerApprox.first >= (distance + innerApprox.second))
+	{
+		return true;
+	}
+
+	// The largest radius of the container is smaller than the distance plus the smallest radius of the containee
+	if (outerApprox.second < (distance + innerApprox.first))
+	{
+		return false;
+	}
+
+	// No dimension of the container can hold the containee
+	if (outerApprox.second < innerApprox.second)
+	{
+		return false;
+	}
+
 	return EllipsoidSolver::getInstance().contains<DIM, PointT, MatrixT>(outer, inner);
 }
 

@@ -42,6 +42,7 @@
 
 #include <Eigen/Cholesky>
 #include <Eigen/LU>
+#include <Eigen/Eigenvalues>
 
 namespace coterie
 {
@@ -125,7 +126,35 @@ public:
 		return PointT::Zero(Set<DIM, PointT>::dimension);
 	}
 
-	MatrixT semiAxes() const;
+	MatrixT semiAxes() const
+	{
+		Eigen::SelfAdjointEigenSolver<MatrixT> eigSolver;
+		eigSolver.computeDirect(A);
+
+		MatrixT V = eigSolver.eigenvectors();
+
+		MatrixT sA;
+		for (int d=0; d < Set<DIM, PointT>::dimension; ++d)
+		{
+			sA.col(d) = 1.0 / sqrt(eigSolver.eigenvalues()[d]) * V.col(d);
+		}
+		return sA;
+	}
+
+	/// \return The <min, max> lengths of the semi-axes
+	std::pair<double, double> extremeRadii() const
+	{
+		std::pair<double, double> minMax{std::numeric_limits<double>::infinity(),
+		                                 -std::numeric_limits<double>::infinity()};
+		MatrixT sA = semiAxes();
+		for (int d=0; d < Set<DIM, PointT>::dimension; ++d)
+		{
+			double len = sA.col(d).norm();
+			minMax.first = std::min(minMax.first, len);
+			minMax.second = std::max(minMax.second, len);
+		}
+		return minMax;
+	}
 
 	inline MatrixT B() const { return Linv.transpose(); }
 
