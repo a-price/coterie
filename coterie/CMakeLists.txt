@@ -61,6 +61,15 @@ include_directories(SYSTEM ${QHULL_INCLUDE_DIR})
 find_package(PythonLibs REQUIRED)
 include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
+find_package(MOSEK QUIET)
+if (${MOSEK_FOUND})
+  message(STATUS "Mosek optimization package found at: ${MOSEK_DIR}")
+  include_directories(SYSTEM ${MOSEK_INCLUDE_DIR})
+  add_definitions(-DUSE_MOSEK=true)
+else()
+  message(WARNING "Mosek optimizer not found.")
+endif()
+
 catkin_python_setup()
 
 ###################################
@@ -99,6 +108,11 @@ target_link_libraries(${PROJECT_NAME}
   ${CGAL_LIBRARIES}
   ${CGAL_3RD_PARTY_LIBRARIES}
 )
+if (${MOSEK_FOUND})
+  target_link_libraries(${PROJECT_NAME}
+    ${MOSEK_LIBRARIES}
+  )
+endif()
 
 
 ## Add cmake target dependencies of the library
@@ -192,5 +206,8 @@ if(CATKIN_ENABLE_TESTING)
       ${CMAKE_THREAD_LIBS_INIT}
     )
   endforeach()
+
+#get_target_property(OUT test_ellipsoid_inclusion LINK_LIBRARIES)
+#message(WARNING "${OUT}")
 
 endif()

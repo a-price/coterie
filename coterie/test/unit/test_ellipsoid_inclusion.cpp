@@ -43,6 +43,99 @@
 
 using namespace coterie;
 
+#if USE_MOSEK
+#include "fusion.h"
+
+using namespace mosek::fusion;
+using namespace monty;
+
+
+template<int DIM,
+	typename PointT=Eigen::Matrix<double, DIM, 1>,
+	typename MatrixT=Eigen::Matrix<double, DIM, DIM>,
+	typename std::enable_if<coterie::Dynamic != DIM>::type* = nullptr >
+mosek::fusion::Matrix::t quadForm(const coterie::EllipsoidalSet<DIM, PointT, MatrixT>& es)
+{
+	auto Ac = es.A * es.c;
+	Eigen::Matrix<double, DIM+1, DIM+1> Q;
+	Q << es.A, -Ac, -Ac.transpose(), (es.c.transpose() * Ac) - 1.0;
+
+	return Matrix::dense(std::make_shared<ndarray<double, 2>>(Q.data(), shape_t<2>{DIM+1, DIM+1}));
+}
+
+
+template<int DIM,
+	typename PointT=Eigen::Matrix<double, DIM, 1>,
+	typename MatrixT=Eigen::Matrix<double, DIM, DIM>,
+	typename std::enable_if<coterie::Dynamic == DIM>::type* = nullptr >
+mosek::fusion::Matrix::t quadForm(const coterie::EllipsoidalSet<DIM, PointT, MatrixT>& es)
+{
+	auto Ac = es.A * es.c;
+	Eigen::Matrix<double, coterie::Dynamic, coterie::Dynamic> Q(es.dimension + 1, es.dimension + 1);
+	Q << es.A, -Ac, -Ac.transpose(), (es.c.transpose() * Ac) - 1.0;
+
+	return Matrix::dense(std::make_shared<ndarray<double, 2>>(Q.data(), shape_t<2>{es.dimension + 1, es.dimension + 1}));
+}
+
+TEST(testEllipsoids, testMOSEK)
+{
+	Model::t M = new Model("sdo1"); auto _M = finally([&]() { M->dispose(); });
+
+	Eigen::VectorXd c1(3);
+	Eigen::MatrixXd B1(3,3);
+	Eigen::VectorXd c2(3);
+	Eigen::MatrixXd B2(3,3);
+
+	c1 << 0.436432, 0.456719, 0.975518; // 0.001, 0, 0;
+	c2 << 0, 0, 0;
+
+	B1 = 10.0 * Eigen::Matrix3d::Identity();
+	B2 = 0.1 * Eigen::Matrix3d::Identity();
+	auto E1 = EllipsoidalSet<3>::BRep(c1, B1);
+	auto E2 = EllipsoidalSet<3>::BRep(c2, B2);
+//	ASSERT_TRUE(es.contains(E1, E2));
+
+//	B2 << 0.180744, -0.0247337,  0.0578441,
+//		-0.0247337,   0.139892,  0.0664183,
+//		0.0578441,  0.0664183,   0.122801;
+//	E2 = EllipsoidalSet<3>::BRep(c2, B2);
+
+//	ASSERT_TRUE(es.contains(E1, E2));
+
+
+	// Setting up the variables
+	Variable::t x  = M->variable("x", Domain::greaterThan(0));
+
+	// Setting up the constant coefficient matrices
+	Matrix::t Q1 = quadForm(E1);
+	Matrix::t Q2 = quadForm(E2);
+
+	// Objective
+	M->objective(ObjectiveSense::Minimize, Expr::zeros(1));
+
+	// Constraints
+	M->constraint("c1", Expr::sub(Expr::mul(x, Q2), Q1), Domain::inPSDCone(E2.dimension + 1));
+//	M->constraint("c1", Expr::sub(Expr::mul(x, Q1), Q2), Domain::inPSDCone(E2.dimension + 1)); // Wrong...
+
+	M->writeTask("/home/arprice/mosek_task.cbf");
+
+	M->solve();
+
+
+	std::cout << "Solution : " << std::endl;
+//	std::cout << "  x = " << *(x->level()) << std::endl;
+//	x->toString()
+	std::cout << M->getProblemStatus() << std::endl;
+	std::cout << M->getPrimalSolutionStatus() << std::endl;
+	std::cout << M->getDualSolutionStatus() << std::endl;
+	std::cout << M->getAcceptedSolutionStatus() << std::endl;
+//	FAIL();
+
+
+
+}
+#endif
+
 TEST(testEllipsoids, test1D)
 {
 	EllipsoidSolver& es = EllipsoidSolver::getInstance();
