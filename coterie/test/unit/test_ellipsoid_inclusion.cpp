@@ -81,10 +81,10 @@ TEST(testEllipsoids, testMOSEK)
 	ASSERT_TRUE(lhsContainsRhs(e2, e2));
 	ASSERT_FALSE(lhsContainsRhs(e1, e2));
 
-//	ASSERT_TRUE(contains(e2, e1));
-//	ASSERT_TRUE(contains(e1, e1));
-//	ASSERT_TRUE(contains(e2, e2));
-//	ASSERT_FALSE(contains(e1, e2));
+	ASSERT_TRUE(contains(e2, e1));
+	ASSERT_TRUE(contains(e1, e1));
+	ASSERT_TRUE(contains(e2, e2));
+	ASSERT_FALSE(contains(e1, e2));
 }
 #endif
 

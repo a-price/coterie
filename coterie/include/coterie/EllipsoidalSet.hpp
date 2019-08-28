@@ -76,14 +76,14 @@ public:
 		return EllipsoidalSet<DIM, PointT, MatrixT>(center, (B*B.transpose()).inverse());
 	}
 
-	virtual bool contains(const PointT& q) const override
+	bool contains(const PointT& q) const override
 	{
 		PointT dist = q-c;
 		return (dist.transpose() * A * dist).value() <= 1.0;
 //		return (dist.transpose() * L).norm() <= 1.0;
 	}
 
-	virtual AABB<DIM, PointT> getAABB() const override
+	AABB<DIM, PointT> getAABB() const override
 	{
 		// NB: Could specialize since nHat is always a basis vector
 		AABB<DIM, PointT> aabb = initializeAABB();
@@ -98,7 +98,7 @@ public:
 		return aabb;
 	}
 
-	virtual bool isConvex() const override { return true; }
+	bool isConvex() const override { return true; }
 
 	virtual PointT centroid() const { return c; }
 
@@ -126,17 +126,33 @@ public:
 		return PointT::Zero(Set<DIM, PointT>::dimension);
 	}
 
+	ENABLE_IF_STATIC_DIMENSION
+	inline MatrixT zeroMatrix() const
+	{
+		return MatrixT::Zero();
+	}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	inline MatrixT zeroMatrix() const
+	{
+		return MatrixT::Zero(Set<DIM, PointT>::dimension, Set<DIM, PointT>::dimension);
+	}
+
 	MatrixT semiAxes() const
 	{
-		Eigen::SelfAdjointEigenSolver<MatrixT> eigSolver;
+		using SolverT = Eigen::SelfAdjointEigenSolver<MatrixT>;
+		using VectorT = typename SolverT::RealVectorType;
+
+		SolverT eigSolver;
 		eigSolver.computeDirect(A);
 
 		MatrixT V = eigSolver.eigenvectors();
+		VectorT v = eigSolver.eigenvalues();
 
-		MatrixT sA;
+		MatrixT sA = zeroMatrix();
 		for (int d=0; d < Set<DIM, PointT>::dimension; ++d)
 		{
-			sA.col(d) = 1.0 / sqrt(eigSolver.eigenvalues()[d]) * V.col(d);
+			sA.col(d) = 1.0 / sqrt(v[d]) * V.col(d);
 		}
 		return sA;
 	}

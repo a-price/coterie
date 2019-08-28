@@ -66,7 +66,7 @@ public:
 
 	using AABB = ::coterie::AABB<DIM, PointT>;
 
-	Set() {}
+	Set() = default;
 
 	virtual bool contains(const PointT& q) const = 0;
 	virtual AABB getAABB() const = 0;
@@ -148,7 +148,7 @@ public:
 	ENABLE_IF_DYNAMIC_DIMENSION
 	AABB(const AABB<DIM, PointT>& other_) : Set<D, PointT>(other_.dimension), min(other_.min_), max(other_.max_) {}
 
-	virtual bool contains(const PointT &q) const
+	bool contains(const PointT &q) const override
 	{
 		bool isInside = true;
 		for (int d=0; d < Set<DIM, PointT>::dimension; ++d)
@@ -159,12 +159,12 @@ public:
 		return isInside;
 	}
 
-	virtual AABB<DIM, PointT> getAABB() const
+	AABB<DIM, PointT> getAABB() const override
 	{
 		return *this;
 	}
 
-	virtual bool isConvex()
+	bool isConvex() const override
 	{
 		return is_always_convex;
 	}
