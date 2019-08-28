@@ -44,95 +44,47 @@
 using namespace coterie;
 
 #if USE_MOSEK
-#include "fusion.h"
 
-using namespace mosek::fusion;
-using namespace monty;
-
-
-template<int DIM,
-	typename PointT=Eigen::Matrix<double, DIM, 1>,
-	typename MatrixT=Eigen::Matrix<double, DIM, DIM>,
-	typename std::enable_if<coterie::Dynamic != DIM>::type* = nullptr >
-mosek::fusion::Matrix::t quadForm(const coterie::EllipsoidalSet<DIM, PointT, MatrixT>& es)
-{
-	auto Ac = es.A * es.c;
-	Eigen::Matrix<double, DIM+1, DIM+1> Q;
-	Q << es.A, -Ac, -Ac.transpose(), (es.c.transpose() * Ac) - 1.0;
-
-	return Matrix::dense(std::make_shared<ndarray<double, 2>>(Q.data(), shape_t<2>{DIM+1, DIM+1}));
-}
-
-
-template<int DIM,
-	typename PointT=Eigen::Matrix<double, DIM, 1>,
-	typename MatrixT=Eigen::Matrix<double, DIM, DIM>,
-	typename std::enable_if<coterie::Dynamic == DIM>::type* = nullptr >
-mosek::fusion::Matrix::t quadForm(const coterie::EllipsoidalSet<DIM, PointT, MatrixT>& es)
-{
-	auto Ac = es.A * es.c;
-	Eigen::Matrix<double, coterie::Dynamic, coterie::Dynamic> Q(es.dimension + 1, es.dimension + 1);
-	Q << es.A, -Ac, -Ac.transpose(), (es.c.transpose() * Ac) - 1.0;
-
-	return Matrix::dense(std::make_shared<ndarray<double, 2>>(Q.data(), shape_t<2>{es.dimension + 1, es.dimension + 1}));
-}
+#include "coterie/MosekEllipsoidSolver.hpp"
+#include "coterie/subsets.hpp"
 
 TEST(testEllipsoids, testMOSEK)
 {
-	Model::t M = new Model("sdo1"); auto _M = finally([&]() { M->dispose(); });
+	using ::coterie::mosek::lhsContainsRhs;
 
-	Eigen::VectorXd c1(3);
-	Eigen::MatrixXd B1(3,3);
-	Eigen::VectorXd c2(3);
-	Eigen::MatrixXd B2(3,3);
+	Eigen::VectorXd c1(1);
+	Eigen::MatrixXd B1(1,1);
+	Eigen::VectorXd c2(1);
+	Eigen::MatrixXd B2(1,1);
 
-	c1 << 0.436432, 0.456719, 0.975518; // 0.001, 0, 0;
-	c2 << 0, 0, 0;
+	c1 << 0; B1 << 1;
+	c2 << 0; B2 << 2;
+	auto E1 = EllipsoidalSet<1>::BRep(c1, B1);
+	auto E2 = EllipsoidalSet<1>::BRep(c2, B2);
 
-	B1 = 10.0 * Eigen::Matrix3d::Identity();
-	B2 = 0.1 * Eigen::Matrix3d::Identity();
-	auto E1 = EllipsoidalSet<3>::BRep(c1, B1);
-	auto E2 = EllipsoidalSet<3>::BRep(c2, B2);
-//	ASSERT_TRUE(es.contains(E1, E2));
+	ASSERT_TRUE(lhsContainsRhs(E2, E1));
+	ASSERT_TRUE(lhsContainsRhs(E1, E1));
+	ASSERT_TRUE(lhsContainsRhs(E2, E2));
+	ASSERT_FALSE(lhsContainsRhs(E1, E2));
 
-//	B2 << 0.180744, -0.0247337,  0.0578441,
-//		-0.0247337,   0.139892,  0.0664183,
-//		0.0578441,  0.0664183,   0.122801;
-//	E2 = EllipsoidalSet<3>::BRep(c2, B2);
-
-//	ASSERT_TRUE(es.contains(E1, E2));
-
-
-	// Setting up the variables
-	Variable::t x  = M->variable("x", Domain::greaterThan(0));
-
-	// Setting up the constant coefficient matrices
-	Matrix::t Q1 = quadForm(E1);
-	Matrix::t Q2 = quadForm(E2);
-
-	// Objective
-	M->objective(ObjectiveSense::Minimize, Expr::zeros(1));
-
-	// Constraints
-	M->constraint("c1", Expr::sub(Expr::mul(x, Q2), Q1), Domain::inPSDCone(E2.dimension + 1));
-//	M->constraint("c1", Expr::sub(Expr::mul(x, Q1), Q2), Domain::inPSDCone(E2.dimension + 1)); // Wrong...
-
-	M->writeTask("/home/arprice/mosek_task.cbf");
-
-	M->solve();
+	ASSERT_TRUE(contains(E2, E1));
+	ASSERT_TRUE(contains(E1, E1));
+	ASSERT_TRUE(contains(E2, E2));
+	ASSERT_FALSE(contains(E1, E2));
 
 
-	std::cout << "Solution : " << std::endl;
-//	std::cout << "  x = " << *(x->level()) << std::endl;
-//	x->toString()
-	std::cout << M->getProblemStatus() << std::endl;
-	std::cout << M->getPrimalSolutionStatus() << std::endl;
-	std::cout << M->getDualSolutionStatus() << std::endl;
-	std::cout << M->getAcceptedSolutionStatus() << std::endl;
-//	FAIL();
+	auto e1 = EllipsoidalSet<Dynamic>::BRep(c1, B1);
+	auto e2 = EllipsoidalSet<Dynamic>::BRep(c2, B2);
 
+	ASSERT_TRUE(lhsContainsRhs(e2, e1));
+	ASSERT_TRUE(lhsContainsRhs(e1, e1));
+	ASSERT_TRUE(lhsContainsRhs(e2, e2));
+	ASSERT_FALSE(lhsContainsRhs(e1, e2));
 
-
+//	ASSERT_TRUE(contains(e2, e1));
+//	ASSERT_TRUE(contains(e1, e1));
+//	ASSERT_TRUE(contains(e2, e2));
+//	ASSERT_FALSE(contains(e1, e2));
 }
 #endif
 
@@ -198,6 +150,46 @@ int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 	ros::init(argc, argv, "test_ellipsoid_inclusion");
+
+	// MOSEK MWE
+
+//	Model::t M = new Model("sdo1"); auto _M = finally([&]() { M->dispose(); });
+//	Matrix::t S1  = Matrix::dense(new_array_ptr<double, 2>({{1.0, 0.0}, {0.0, -1.0}}));
+//	Matrix::t S2  = Matrix::dense(new_array_ptr<double, 2>({{0.25, 0.0}, {0.0, -1.0}}));
+//	Variable::t lambda = M->variable("lambda", Domain::greaterThan(0));
+//	Variable::t X = M->variable("stub", Domain::inPSDCone(2));
+//
+//	M->objective(ObjectiveSense::Minimize, Expr::zeros(1));
+//	M->constraint("c1", Expr::sub(X, Expr::sub(Expr::mul(lambda, S1), S2)), Domain::equalsTo(0));
+//	M->solve();
+//
+//	M->writeTask("/home/arprice/mosek_task.ptf");
+//
+//	std::cout << M->getProblemStatus() << std::endl;
+//
+//	auto status = M->getProblemStatus();
+//	switch(status)
+//	{
+//	case mosek::fusion::ProblemStatus::PrimalFeasible:
+//	case mosek::fusion::ProblemStatus::PrimalAndDualFeasible:
+//		std::cout << "Ellipsoid is contained." << std::endl;
+//		break;
+//	case ProblemStatus::DualInfeasible:
+//		std::cout << "Dual infeasibility certificate found.\n";
+//		std::cout << "Ellipsoid is not contained." << std::endl;
+//		break;
+//
+//	case ProblemStatus::PrimalInfeasible:
+//		std::cout << "Primal infeasibility certificate found.\n";
+//		std::cout << "Ellipsoid is not contained." << std::endl;
+//		break;
+//
+//	default:
+//		std::stringstream str;
+//		str << status;
+//		throw std::logic_error("MOSEK return type is not handled in ellipsoid solver: '" + str.str() + "'.");
+//	}
+
 
     return RUN_ALL_TESTS();
 }

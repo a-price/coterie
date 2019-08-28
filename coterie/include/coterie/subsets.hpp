@@ -45,6 +45,10 @@
 #include "NonparametricSets.hpp"
 #include "EllipsoidSolver.h"
 
+#ifdef USE_MOSEK
+#include "MosekEllipsoidSolver.hpp"
+#endif
+
 namespace coterie
 {
 
@@ -137,7 +141,11 @@ bool contains(const EllipsoidalSet<DIM, PointT, MatrixT>& outer, const Ellipsoid
 		return false;
 	}
 
+	#ifdef USE_MOSEK
+	return ::coterie::mosek::lhsContainsRhs(outer, inner);
+	#else
 	return EllipsoidSolver::getInstance().contains<DIM, PointT, MatrixT>(outer, inner);
+	#endif
 }
 
 template<int DIM,
