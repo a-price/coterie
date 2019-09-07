@@ -66,8 +66,9 @@ inline void serialize(Archive & ar,
 	if (rows * cols != t.size())
 		t.resize(rows, cols);
 
-	for (Index i = 0; i < t.size(); i++)
-		ar & t.data()[i];
+//	for (Index i = 0; i < t.size(); ++i)
+//		ar & t.data()[i];
+	ar & boost::serialization::make_array(t.data(), t.size());
 }
 
 } // namespace serialization
