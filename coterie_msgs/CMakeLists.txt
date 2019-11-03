@@ -1,10 +1,15 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(coterie_msgs)
 
+set(MSG_DEPS
+  std_msgs
+  visualization_msgs
+)
+
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   message_generation
-  std_msgs
+  ${MSG_DEPS}
 )
 
 ################################################
@@ -22,13 +27,14 @@ add_message_files(
   PointSet.msg
   PolytopeSet.msg
   PolymorphicSet.msg
+  PolymorphicSetVisualizationStamped.msg
   RasterSet.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs
+  ${MSG_DEPS}
 )
 
 ###################################
@@ -38,7 +44,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES coterie_msgs
-  CATKIN_DEPENDS message_runtime std_msgs
+  CATKIN_DEPENDS message_runtime ${MSG_DEPS}
 #  DEPENDS system_lib
 )
 
