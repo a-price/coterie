@@ -15,8 +15,10 @@ uint8 type # Specifies which type of set is being transmitted
 uint8 SPACE_R1=1
 uint8 SPACE_R2=2
 uint8 SPACE_R3=3
-uint8 SPACE_SE2=4
-uint8 SPACE_SE3=5
+uint8 SPACE_SO2=4
+uint8 SPACE_SE2=5
+uint8 SPACE_SO3=6
+uint8 SPACE_SE3=7
 
 uint8 space # Specifies what space a set lies in (mainly to disambiguate SE2 and R3)
 
