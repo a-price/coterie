@@ -30,6 +30,8 @@
 #include "coterie_rviz_plugin/PolymorphicSetDisplay.h"
 #include "coterie_rviz_plugin/PolymorphicSetVisual.h"
 
+#include "coterie/QuaternionTraits.hpp"
+
 #include "coterie/serialization/PolymorphicSetMsg.hpp"
 
 #include "coterie/visualization/aabb_set.hpp"
@@ -41,6 +43,7 @@
 #include <OGRE/OgreSceneManager.h>
 
 #include <tf/transform_listener.h>
+#include <tf/transform_datatypes.h>
 
 #include <rviz/visualization_manager.h>
 #include <rviz/properties/ros_topic_property.h>
@@ -50,8 +53,256 @@
 #include <rviz/properties/enum_property.h>
 #include <rviz/frame_manager.h>
 
+#include <cfloat> // DBL_MAX
+#include <cmath> // std::nextafter
+#include <random>
+
 namespace coterie_rviz_plugin
 {
+
+void visualizePosition(const coterie_msgs::PolymorphicSet& set, visualization_msgs::MarkerArray& ma)
+{
+	// TODO: if space == SE3
+	// Get the set info
+	switch (set.type)
+	{
+	case coterie_msgs::PolymorphicSet::TYPE_AABB_SET:
+	{
+		auto aabb = coterie::deserialize(set.aabb.front());
+		auto m = coterie::visualizePosition(aabb, Eigen::VectorXd::Ones(aabb.dimension).eval());
+		ma.markers.push_back(m);
+		break;
+	}
+	case coterie_msgs::PolymorphicSet::TYPE_POINT_SET:
+	{
+		auto points = coterie::deserialize(set.point.front());
+		auto m = coterie::visualizePosition(points, Eigen::VectorXd::Ones(points.dimension).eval());
+		ma.markers.push_back(m);
+		break;
+	}
+	case coterie_msgs::PolymorphicSet::TYPE_POLYTOPE_SET:
+	{
+		auto polytope = coterie::deserialize(set.polytope.front());
+		auto m = coterie::visualizePosition(polytope, Eigen::VectorXd::Ones(polytope.dimension).eval());
+		ma.markers.push_back(m);
+		break;
+	}
+	case coterie_msgs::PolymorphicSet::TYPE_ELLIPSOIDAL_SET:
+	{
+		auto ellipsoid = coterie::deserialize(set.ellipsoid.front());
+		auto m = coterie::visualizePosition(ellipsoid, Eigen::VectorXd::Ones(ellipsoid.dimension).eval());
+		ma.markers.push_back(m);
+		break;
+	}
+//	case coterie_msgs::PolymorphicSet::TYPE_RASTER_SET:
+//	{
+//		auto raster = coterie::deserialize(set.raster.front());
+//		break;
+//	}
+	default:
+		throw std::runtime_error("Set type '" + std::to_string(set.type) + "' unknown.");
+	}
+}
+
+template <typename Collection>
+std::vector<geometry_msgs::Transform> deltasToTransforms(const Collection& deltas, const uint8_t space)
+{
+	std::vector<geometry_msgs::Transform> tfs;
+
+	geometry_msgs::Transform Identity;
+	Identity.rotation.w = 1.0;
+
+	for (const auto& delta : deltas)
+	{
+		geometry_msgs::Transform T = Identity;
+		switch (space)
+		{
+		case coterie_msgs::PolymorphicSet::SPACE_R1:
+		{
+			T.translation.x += delta[0];
+			break;
+		}
+		case coterie_msgs::PolymorphicSet::SPACE_R2:
+		{
+			T.translation.x += delta[0];
+			T.translation.y += delta[1];
+			break;
+		}
+		case coterie_msgs::PolymorphicSet::SPACE_R3:
+		{
+			T.translation.x += delta[0];
+			T.translation.y += delta[1];
+			T.translation.z += delta[2];
+			break;
+		}
+		case coterie_msgs::PolymorphicSet::SPACE_SO2:
+		{
+			Eigen::Vector3d r(0, 0, delta[0]);
+			Eigen::Quaterniond q = coterie::manifold_traits<Eigen::Quaterniond>::expmap(r);
+			T.rotation.x = q.x();
+			T.rotation.y = q.y();
+			T.rotation.z = q.z();
+			T.rotation.w = q.w();
+			break;
+		}
+		case coterie_msgs::PolymorphicSet::SPACE_SE2:
+		{
+			T.translation.x += delta[0];
+			T.translation.y += delta[1];
+
+			Eigen::Vector3d r(0, 0, delta[2]);
+			Eigen::Quaterniond q = coterie::manifold_traits<Eigen::Quaterniond>::expmap(r);
+			T.rotation.x = q.x();
+			T.rotation.y = q.y();
+			T.rotation.z = q.z();
+			T.rotation.w = q.w();
+			break;
+		}
+		case coterie_msgs::PolymorphicSet::SPACE_SO3:
+		{
+			Eigen::Vector3d r(delta[0], delta[1], delta[2]);
+			Eigen::Quaterniond q = coterie::manifold_traits<Eigen::Quaterniond>::expmap(r);
+			T.rotation.x = q.x();
+			T.rotation.y = q.y();
+			T.rotation.z = q.z();
+			T.rotation.w = q.w();
+			break;
+		}
+		case coterie_msgs::PolymorphicSet::SPACE_SE3:
+		{
+			T.translation.x += delta[0];
+			T.translation.y += delta[1];
+			T.translation.z += delta[2];
+
+			Eigen::Vector3d r(delta[3], delta[4], delta[5]);
+			Eigen::Quaterniond q = coterie::manifold_traits<Eigen::Quaterniond>::expmap(r);
+			T.rotation.x = q.x();
+			T.rotation.y = q.y();
+			T.rotation.z = q.z();
+			T.rotation.w = q.w();
+			break;
+		}
+		default:
+			ROS_ERROR_STREAM("Space type '" << std::to_string(space) << "' unknown.");
+		}
+
+		tfs.push_back(T);
+	}
+
+	return tfs;
+}
+
+template <typename SetT>
+std::vector<Eigen::VectorXd> getValidSamples(const SetT& set, const int num_samples)
+{
+	static std::random_device rd;
+	static std::mt19937 gen(rd());
+
+	const auto aabb = set.getAABB();
+
+	std::vector<std::uniform_real_distribution<>> distrs;
+
+	for (int d = 0; d < aabb.dimension; ++d)
+	{
+		distrs.emplace_back(std::uniform_real_distribution<>(aabb.min[d], std::nextafter(aabb.max[d], DBL_MAX)));
+	}
+
+	std::vector<Eigen::VectorXd> samples;
+
+	for (int i = 0; i < num_samples * 10; ++i)
+	{
+		Eigen::VectorXd x(aabb.dimension);
+		for (int d = 0; d < aabb.dimension; ++d)
+		{
+			x[d] = distrs[d](gen);
+		}
+
+		if (set.contains(x))
+		{
+			samples.push_back(x);
+		}
+
+		if (samples.size() == num_samples)
+		{
+			return samples;
+		}
+	}
+
+	return samples;
+}
+
+void getTransforms(const SET_SAMPLE_STYLE style, const int num_samples, const coterie_msgs::PolymorphicSet& set, std::vector<geometry_msgs::Transform>& tfs)
+{
+	switch (set.type)
+	{
+	case coterie_msgs::PolymorphicSet::TYPE_AABB_SET:
+	{
+		auto aabb = coterie::deserialize(set.aabb.front());
+		if (SET_SAMPLE_STYLE::RANDOM == style)
+		{
+			tfs = deltasToTransforms(getValidSamples(aabb, num_samples), set.space);
+		}
+		else
+		{
+			tfs = deltasToTransforms(aabb.getCorners(), set.space);
+		}
+		break;
+	}
+	case coterie_msgs::PolymorphicSet::TYPE_POINT_SET:
+	{
+		auto points = coterie::deserialize(set.point.front());
+		if (SET_SAMPLE_STYLE::RANDOM == style)
+		{
+			tfs = deltasToTransforms(getValidSamples(points, num_samples), set.space);
+		}
+		else
+		{
+			tfs = deltasToTransforms(points.members, set.space);
+		}
+		break;
+	}
+	case coterie_msgs::PolymorphicSet::TYPE_POLYTOPE_SET:
+	{
+		auto polytope = coterie::deserialize(set.polytope.front());
+		if (SET_SAMPLE_STYLE::RANDOM == style)
+		{
+			tfs = deltasToTransforms(getValidSamples(polytope, num_samples), set.space);
+		}
+		else
+		{
+			tfs = deltasToTransforms(polytope.supportPoints.members, set.space);
+		}
+		break;
+	}
+	case coterie_msgs::PolymorphicSet::TYPE_ELLIPSOIDAL_SET:
+	{
+		auto ellipsoid = coterie::deserialize(set.ellipsoid.front());
+		if (SET_SAMPLE_STYLE::RANDOM == style)
+		{
+			tfs = deltasToTransforms(getValidSamples(ellipsoid, num_samples), set.space);
+		}
+		else
+		{
+			Eigen::MatrixXd sA = ellipsoid.semiAxes();
+			std::vector<Eigen::VectorXd> deltas(ellipsoid.dimension * 2);
+			for (int i = 0; i < ellipsoid.dimension; ++i)
+			{
+				deltas[i] = sA.col(i);
+				deltas[i + ellipsoid.dimension] = -deltas[i];
+			}
+			tfs = deltasToTransforms(deltas, set.space);
+		}
+		break;
+	}
+//	case coterie_msgs::PolymorphicSet::TYPE_RASTER_SET:
+//	{
+//		auto raster = coterie::deserialize(set.raster.front());
+//		break;
+//	}
+	default:
+		throw std::runtime_error("Set type '" + std::to_string(set.type) + "' unknown.");
+	}
+}
 
 PolymorphicSetDisplay::PolymorphicSetDisplay()
 	: MarkerDisplay()
@@ -65,6 +316,10 @@ PolymorphicSetDisplay::PolymorphicSetDisplay()
 	                                         this, SLOT(updateStyle()));
 	style_property_->addOption("Extents", SET_SAMPLE_STYLE::EXTENTS);
 	style_property_->addOption("Random", SET_SAMPLE_STYLE::RANDOM);
+
+	sample_count_property_ = new rviz::IntProperty("Number of Samples", 10,
+	                                               "Number of sampled poses to display.",
+	                                               this, SLOT(updateSampleCount()));
 
 	color_property_ = new rviz::ColorProperty( "Color", QColor( 204, 51, 204 ),
 	                                           "Color to draw the acceleration arrows.",
@@ -118,24 +373,24 @@ void PolymorphicSetDisplay::unsubscribe()
 void PolymorphicSetDisplay::updateStyle()
 {
 	active_style_ = static_cast<SET_SAMPLE_STYLE>(style_property_->getOptionInt());
+	sample_count_property_->setReadOnly(SET_SAMPLE_STYLE::EXTENTS == active_style_);
+
+	regenerateDisplay();
+}
+
+void PolymorphicSetDisplay::updateSampleCount()
+{
+	active_sample_count_ = sample_count_property_->getInt();
+
+	regenerateDisplay();
 }
 
 // Set the current color and alpha values for each visual.
 void PolymorphicSetDisplay::updateColorAndAlpha()
 {
-	float alpha = alpha_property_->getFloat();
-	Ogre::ColourValue color = color_property_->getOgreColor();
+	applyColorAndAlpha(*active_markers_);
 
-	for( size_t i = 0; i < visuals_.size(); i++ )
-	{
-		visuals_[ i ]->setColor( color.r, color.g, color.b, alpha );
-	}
-
-	for (auto& m : active_markers_->markers)
-	{
-		m.color.r = color.r; m.color.g = color.g; m.color.b = color.b; m.color.a = alpha;
-	}
-	incomingMarkerArray(active_markers_);
+	regenerateDisplay();
 }
 
 // Set the number of past visuals to show.
@@ -144,109 +399,95 @@ void PolymorphicSetDisplay::updateHistoryLength()
 	visuals_.rset_capacity(history_length_property_->getInt());
 }
 
+void PolymorphicSetDisplay::applyColorAndAlpha(visualization_msgs::MarkerArray& ma) const
+{
+	Ogre::ColourValue color = color_property_->getOgreColor();
+	color.a = alpha_property_->getFloat();
+	for (auto& m : ma.markers)
+	{
+		m.color.r = color.r; m.color.g = color.g; m.color.b = color.b; m.color.a = color.a;
+	}
+}
+
+geometry_msgs::Pose operator*(const geometry_msgs::Pose& P, const geometry_msgs::Transform& T)
+{
+	tf::Transform A;
+	tf::poseMsgToTF(P, A);
+	tf::Transform B;
+	tf::transformMsgToTF(T, B);
+	tf::Transform C = A * B;
+	geometry_msgs::Pose D;
+	tf::poseTFToMsg(C, D);
+	return D;
+}
+
 // This is our callback to handle an incoming message.
 void PolymorphicSetDisplay::processMessage( const MsgType::ConstPtr& msg )
 {
+	last_message_ = msg;
 	ROS_WARN("Got Message!");
+	regenerateDisplay();
+}
+
+void PolymorphicSetDisplay::regenerateDisplay()
+{
+	ROS_WARN("Drawing!");
 	// Here we call the rviz::FrameManager to get the transform from the
 	// fixed frame to the frame in the header of this Imu message.  If
 	// it fails, we can't do anything else so we return.
 	Ogre::Quaternion orientation;
 	Ogre::Vector3 position;
-	if( !context_->getFrameManager()->getTransform( msg->header.frame_id,
-	                                                msg->header.stamp,
+	if( !context_->getFrameManager()->getTransform( last_message_->header.frame_id,
+	                                                last_message_->header.stamp,
 	                                                position, orientation ))
 	{
 		ROS_DEBUG( "Error transforming from frame '%s' to frame '%s'",
-		           msg->header.frame_id.c_str(), qPrintable( fixed_frame_ ));
+		           last_message_->header.frame_id.c_str(), qPrintable( fixed_frame_ ));
 		return;
 	}
 
-	// TODO: switch(active_style_)
-	// TODO: if (msg.marker.markers.empty())
+	// Clean up old markers
+	if (active_markers_)
+	{
+		for (auto& m : active_markers_->markers)
+		{
+			m.action = visualization_msgs::Marker::DELETEALL;
+		}
 
-	visualization_msgs::MarkerArray::Ptr ma = boost::make_shared<visualization_msgs::MarkerArray>();
-
-	// Get the set info
-	switch (msg->set.type)
-	{
-	case coterie_msgs::PolymorphicSet::TYPE_AABB_SET:
-	{
-		auto aabb = coterie::deserialize(msg->set.aabb.front());
-		auto m = coterie::visualizePosition(aabb, Eigen::VectorXd::Ones(aabb.dimension).eval());
-		ma->markers.push_back(m);
-		break;
-	}
-	case coterie_msgs::PolymorphicSet::TYPE_POINT_SET:
-	{
-		auto points = coterie::deserialize(msg->set.point.front());
-		auto m = coterie::visualizePosition(points, Eigen::VectorXd::Ones(points.dimension).eval());
-		ma->markers.push_back(m);
-		break;
-	}
-	case coterie_msgs::PolymorphicSet::TYPE_POLYTOPE_SET:
-	{
-		auto polytope = coterie::deserialize(msg->set.polytope.front());
-		auto m = coterie::visualizePosition(polytope, Eigen::VectorXd::Ones(polytope.dimension).eval());
-		ma->markers.push_back(m);
-		break;
-	}
-	case coterie_msgs::PolymorphicSet::TYPE_ELLIPSOIDAL_SET:
-	{
-		auto ellipsoid = coterie::deserialize(msg->set.ellipsoid.front());
-		auto m = coterie::visualizePosition(ellipsoid, Eigen::VectorXd::Ones(ellipsoid.dimension).eval());
-		ma->markers.push_back(m);
-		break;
-	}
-//	case coterie_msgs::PolymorphicSet::TYPE_RASTER_SET:
-//	{
-//		auto raster = coterie::deserialize(msg->set.raster.front());
-//		break;
-//	}
-	default:
-		throw std::runtime_error("Set type '" + std::to_string(msg->set.type) + "' unknown.");
+		rviz::MarkerDisplay::incomingMarkerArray(active_markers_);
 	}
 
-	Ogre::ColourValue color = color_property_->getOgreColor();
-	for (auto& m : ma->markers)
-	{
-		m.header = msg->header;
-		m.color.r = color.r; m.color.g = color.g; m.color.b = color.b; m.color.a = color.a;
-	}
+	active_markers_ = boost::make_shared<visualization_msgs::MarkerArray>();
 
-	active_markers_ = ma;
-
-	rviz::MarkerDisplay::incomingMarkerArray(active_markers_);
-//	rviz::MarkerDisplay::processMessage(ma);
-//	for (auto& m : ma->markers)
-//	{
-//		tf_filter_->add(visualization_msgs::Marker::Ptr(new visualization_msgs::Marker(m)));
-//	}
-/*
-	// We are keeping a circular buffer of visual pointers.  This gets
-	// the next one, or creates and stores it if the buffer is not full
-	boost::shared_ptr<PolymorphicSetVisual> visual;
-	if( visuals_.full() )
+	if (last_message_->marker.markers.empty())
 	{
-		visual = visuals_.front();
+		visualizePosition(last_message_->set, *active_markers_);
 	}
 	else
 	{
-		visual.reset(new PolymorphicSetVisual( context_->getSceneManager(), scene_node_ ));
+		std::vector<geometry_msgs::Transform> tfs;
+		getTransforms(active_style_, active_sample_count_, last_message_->set, tfs);
+		ROS_WARN_STREAM("Got " << tfs.size() << " transforms.");
+		int count = 0;
+		for (const auto& T : tfs)
+		{
+			for (auto m : last_message_->marker.markers) // make a copy each time
+			{
+				m.pose = m.pose * T;
+				m.id = ++count;
+				active_markers_->markers.push_back(m);
+			}
+		}
 	}
 
-	// Now set or update the contents of the chosen visual.
-	visual->setMessage( msg );
-	visual->setFramePosition( position );
-	visual->setFrameOrientation( orientation );
+	for (auto& m : active_markers_->markers)
+	{
+		m.header = last_message_->header;
+	}
 
-	float alpha = alpha_property_->getFloat();
-	Ogre::ColourValue color = color_property_->getOgreColor();
-	visual->setColor( color.r, color.g, color.b, alpha );
+	applyColorAndAlpha(*active_markers_);
+	rviz::MarkerDisplay::incomingMarkerArray(active_markers_);
 
-	// And send it to the end of the circular buffer
-	visuals_.push_back(visual);
- */
 }
 
 } // namespace coterie_rviz_plugin

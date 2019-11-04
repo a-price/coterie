@@ -88,21 +88,28 @@ protected:
 	// These Qt slots get connected to signals indicating changes in the user-editable properties.
 private Q_SLOTS:
 	void updateStyle();
+	void updateSampleCount();
 	void updateColorAndAlpha();
 	void updateHistoryLength();
 
 	// Function to handle an incoming ROS message.
 private:
 	void processMessage( const MsgType::ConstPtr& msg );
+	void applyColorAndAlpha(visualization_msgs::MarkerArray& ma) const;
+
+	void regenerateDisplay();
 
 	// Storage for the list of visuals.  It is a circular buffer where
 	// data gets popped from the front (oldest) and pushed to the back (newest)
 	boost::circular_buffer<boost::shared_ptr<PolymorphicSetVisual> > visuals_;
 	SET_SAMPLE_STYLE active_style_ = SET_SAMPLE_STYLE::EXTENTS;
+	int active_sample_count_ = 10;
 	visualization_msgs::MarkerArray::Ptr active_markers_;
+	MsgType::ConstPtr last_message_;
 
 	// User-editable property variables.
 	rviz::EnumProperty* style_property_;
+	rviz::IntProperty* sample_count_property_;
 	rviz::ColorProperty* color_property_;
 	rviz::FloatProperty* alpha_property_;
 	rviz::IntProperty* history_length_property_;
