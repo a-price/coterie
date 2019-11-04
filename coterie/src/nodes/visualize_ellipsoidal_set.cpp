@@ -36,6 +36,7 @@
  */
 
 #include <ros/ros.h>
+#include "coterie/serialization/PolymorphicSetMsg.hpp"
 #include "coterie/EllipsoidalSet.hpp"
 #include "coterie/visualization/ellipsoidal_set.hpp"
 #include "coterie/construction.hpp"

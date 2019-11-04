@@ -46,9 +46,10 @@ namespace coterie
 {
 
 template<int DIM, typename PointT=Eigen::Matrix<double, DIM, 1> >
-visualization_msgs::Marker visualizeExtents(const AABB<DIM, PointT> &aabb,
-                                            const PointT &scale = PointT::Ones())
+visualization_msgs::Marker visualizePosition(const AABB<DIM, PointT>& aabb,
+                                             const PointT &scale = PointT::Ones())
 {
+	const int dimension = aabb.dimension;
 	PointT boxCenter = aabb.getCenter();
 	PointT boxExtents = aabb.getDimensions();
 
@@ -62,13 +63,13 @@ visualization_msgs::Marker visualizeExtents(const AABB<DIM, PointT> &aabb,
 
 	box.frame_locked = true;
 	box.pose.position.x = boxCenter[0] * scale[0];
-	box.pose.position.y = ((DIM >= 2) ? boxCenter[1] * scale[1] : 0);
-	box.pose.position.z = ((DIM >= 3) ? boxCenter[2] * scale[2] : 0);
+	box.pose.position.y = ((dimension >= 2) ? boxCenter[1] * scale[1] : 0);
+	box.pose.position.z = ((dimension >= 3) ? boxCenter[2] * scale[2] : 0);
 	box.pose.orientation.w = 1.0;
 
 	box.scale.x = boxExtents[0] * scale[0];
-	box.scale.y = ((DIM >= 2) ? boxExtents[1] * scale[1] : 0);
-	box.scale.z = ((DIM >= 3) ? boxExtents[2] * scale[2] : 0);
+	box.scale.y = ((dimension >= 2) ? boxExtents[1] * scale[1] : 0);
+	box.scale.z = ((dimension >= 3) ? boxExtents[2] * scale[2] : 0);
 
 	// Default to LightSkyBlue rgb(135,206,250)
 	box.color.a = 0.5; // Don't forget to set the alpha!

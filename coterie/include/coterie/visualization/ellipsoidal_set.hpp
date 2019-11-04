@@ -54,6 +54,7 @@ template< int DIM=3,
 visualization_msgs::Marker visualizePosition(const EllipsoidalSet<DIM, PointT, MatrixT>& es,
                                              const PointT& scale = PointT::Ones())
 {
+	const int dimension = es.dimension;
 	// NB: computeDirect for 2x2 or 3x3 matrices
 	Eigen::SelfAdjointEigenSolver<MatrixT> eigSolver;
 	eigSolver.computeDirect(es.A);
@@ -61,7 +62,7 @@ visualization_msgs::Marker visualizePosition(const EllipsoidalSet<DIM, PointT, M
 	// Handle dimensions other than 3
 	MatrixT V = eigSolver.eigenvectors();
 	Eigen::Matrix3d Vaug = Eigen::Matrix3d::Identity();
-	Vaug.topLeftCorner<DIM, DIM>() = V;
+	Vaug.topLeftCorner(dimension, dimension) = V;
 	Eigen::Quaterniond q(Vaug);
 
 	visualization_msgs::Marker marker;
@@ -74,7 +75,7 @@ visualization_msgs::Marker visualizePosition(const EllipsoidalSet<DIM, PointT, M
 	marker.frame_locked = true;
 	marker.pose.position.x = es.c[0] * scale[0];
 	marker.pose.position.y = es.c[1] * scale[1];
-	if (DIM >= 3)
+	if (dimension >= 3)
 	{
 		marker.pose.position.z = es.c[2] * scale[2];
 	}
@@ -89,7 +90,7 @@ visualization_msgs::Marker visualizePosition(const EllipsoidalSet<DIM, PointT, M
 	// NB: 1/sqrt(v) is the semi-axis length, we want the full axis length
 	marker.scale.x = 2.0 * 1.0/sqrt(eigSolver.eigenvalues()[0]) * scale[0];
 	marker.scale.y = 2.0 *1.0/sqrt(eigSolver.eigenvalues()[1]) * scale[1];
-	if (DIM >= 3)
+	if (dimension >= 3)
 	{
 		marker.scale.z = 2.0 *1.0/sqrt(eigSolver.eigenvalues()[2]) * scale[2];
 	}

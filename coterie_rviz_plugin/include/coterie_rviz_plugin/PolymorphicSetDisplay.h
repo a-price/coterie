@@ -33,7 +33,8 @@
 #include <boost/circular_buffer.hpp>
 
 #include <coterie_msgs/PolymorphicSetVisualizationStamped.h>
-#include <rviz/message_filter_display.h>
+//#include <rviz/message_filter_display.h>
+#include <rviz/default_plugin/marker_display.h>
 
 namespace Ogre
 {
@@ -45,17 +46,26 @@ namespace rviz
 class ColorProperty;
 class FloatProperty;
 class IntProperty;
+class EnumProperty;
 }
 
 namespace coterie_rviz_plugin
 {
 
+enum SET_SAMPLE_STYLE
+{
+	EXTENTS,
+	RANDOM
+};
+
 class PolymorphicSetVisual;
 
-class PolymorphicSetDisplay : public rviz::MessageFilterDisplay<coterie_msgs::PolymorphicSetVisualizationStamped>
+class PolymorphicSetDisplay : public rviz::MarkerDisplay
+	// : public rviz::MessageFilterDisplay<coterie_msgs::PolymorphicSetVisualizationStamped>
 {
 Q_OBJECT
 public:
+	using MsgType = coterie_msgs::PolymorphicSetVisualizationStamped;
 	// Constructor.  pluginlib::ClassLoader creates instances by calling
 	// the default constructor, so make sure you have one.
 	PolymorphicSetDisplay();
@@ -67,25 +77,32 @@ public:
 	// 3D view.  These functions are where these connections are made
 	// and broken.
 protected:
-	void onInitialize() override;
+	/** @brief Overridden from MarkerDisplay.  Subscribes to the marker
+	 * array topic. */
+	void subscribe() override;
 
-	// A helper to clear this display back to the initial state.
-	void reset() override;
+	/** @brief Overridden from MarkerDisplay.  Unsubscribes to the
+	 * marker array topic. */
+	void unsubscribe() override;
 
 	// These Qt slots get connected to signals indicating changes in the user-editable properties.
 private Q_SLOTS:
+	void updateStyle();
 	void updateColorAndAlpha();
 	void updateHistoryLength();
 
 	// Function to handle an incoming ROS message.
 private:
-	void processMessage( const coterie_msgs::PolymorphicSetVisualizationStamped::ConstPtr& msg ) override;
+	void processMessage( const MsgType::ConstPtr& msg );
 
 	// Storage for the list of visuals.  It is a circular buffer where
 	// data gets popped from the front (oldest) and pushed to the back (newest)
 	boost::circular_buffer<boost::shared_ptr<PolymorphicSetVisual> > visuals_;
+	SET_SAMPLE_STYLE active_style_ = SET_SAMPLE_STYLE::EXTENTS;
+	visualization_msgs::MarkerArray::Ptr active_markers_;
 
 	// User-editable property variables.
+	rviz::EnumProperty* style_property_;
 	rviz::ColorProperty* color_property_;
 	rviz::FloatProperty* alpha_property_;
 	rviz::IntProperty* history_length_property_;

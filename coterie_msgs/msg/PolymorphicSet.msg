@@ -6,9 +6,19 @@ uint8 TYPE_AABB_SET=1
 uint8 TYPE_POINT_SET=2
 uint8 TYPE_POLYTOPE_SET=3
 uint8 TYPE_ELLIPSOIDAL_SET=4
-uint8 TYPE_RASTER_SET=4
+uint8 TYPE_RASTER_SET=5
 
 uint8 type # Specifies which type of set is being transmitted
+
+# Enum constants for space parameter
+
+uint8 SPACE_R1=1
+uint8 SPACE_R2=2
+uint8 SPACE_R3=3
+uint8 SPACE_SE2=4
+uint8 SPACE_SE3=5
+
+uint8 space # Specifies what space a set lies in (mainly to disambiguate SE2 and R3)
 
 # Message data
 # Subtypes are listed as arrays, so that it is clear which ones are not in use (size() == 0)

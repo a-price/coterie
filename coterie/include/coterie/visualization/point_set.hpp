@@ -55,6 +55,7 @@ template<int DIM,
 visualization_msgs::Marker visualizePosition(const PointSet<DIM, PointT, RosterT>& ps,
                                              const PointT& scale = PointT::Ones())
 {
+	const int dimension = ps.dimension;
 	visualization_msgs::Marker marker;
 	marker.header.frame_id = "World";
 	marker.header.stamp = ros::Time();
@@ -71,15 +72,8 @@ visualization_msgs::Marker visualizePosition(const PointSet<DIM, PointT, RosterT
 	marker.pose.orientation.z = 0;
 	marker.pose.orientation.w = 1;
 	marker.scale.x = scale[0];
-	marker.scale.y = scale[1];
-	if (DIM >= 3)
-	{
-		marker.scale.z = scale[2];
-	}
-	else
-	{
-		marker.scale.z = 1;
-	}
+	marker.scale.y = (dimension >= 2) ? scale[1] : 1;
+	marker.scale.z = (dimension >= 3) ? scale[2] : 1;
 
 	for (const PointT& p : ps.members)
 	{
