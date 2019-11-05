@@ -49,6 +49,11 @@ class IntProperty;
 class EnumProperty;
 }
 
+namespace coterie
+{
+class RNG;
+}
+
 namespace coterie_rviz_plugin
 {
 
@@ -61,7 +66,6 @@ enum SET_SAMPLE_STYLE
 class PolymorphicSetVisual;
 
 class PolymorphicSetDisplay : public rviz::MarkerDisplay
-	// : public rviz::MessageFilterDisplay<coterie_msgs::PolymorphicSetVisualizationStamped>
 {
 Q_OBJECT
 public:
@@ -113,6 +117,8 @@ private:
 	rviz::ColorProperty* color_property_;
 	rviz::FloatProperty* alpha_property_;
 	rviz::IntProperty* history_length_property_;
+
+	std::shared_ptr<coterie::RNG> rng;
 };
 }
 

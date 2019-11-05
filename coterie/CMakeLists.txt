@@ -100,6 +100,7 @@ include_directories(include)
 add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/template_instantiations.cpp
   src/${PROJECT_NAME}/EllipsoidSolver.cpp
+  src/${PROJECT_NAME}/sampling/RNG.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${Boost_LIBRARIES}

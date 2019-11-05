@@ -32,6 +32,8 @@
 
 #include "coterie/QuaternionTraits.hpp"
 
+#include "coterie/sampling/uniform_sample.hpp"
+
 #include "coterie/serialization/PolymorphicSetMsg.hpp"
 
 #include "coterie/visualization/aabb_set.hpp"
@@ -53,8 +55,6 @@
 #include <rviz/properties/enum_property.h>
 #include <rviz/frame_manager.h>
 
-#include <cfloat> // DBL_MAX
-#include <cmath> // std::nextafter
 #include <random>
 
 namespace coterie_rviz_plugin
@@ -192,47 +192,9 @@ std::vector<geometry_msgs::Transform> deltasToTransforms(const Collection& delta
 	return tfs;
 }
 
-template <typename SetT>
-std::vector<Eigen::VectorXd> getValidSamples(const SetT& set, const int num_samples)
+void getTransforms(const SET_SAMPLE_STYLE style, const int num_samples, const coterie_msgs::PolymorphicSet& set, coterie::RNG& rng, std::vector<geometry_msgs::Transform>& tfs)
 {
-	static std::random_device rd;
-	static std::mt19937 gen(rd());
-
-	const auto aabb = set.getAABB();
-
-	std::vector<std::uniform_real_distribution<>> distrs;
-
-	for (int d = 0; d < aabb.dimension; ++d)
-	{
-		distrs.emplace_back(std::uniform_real_distribution<>(aabb.min[d], std::nextafter(aabb.max[d], DBL_MAX)));
-	}
-
 	std::vector<Eigen::VectorXd> samples;
-
-	for (int i = 0; i < num_samples * 10; ++i)
-	{
-		Eigen::VectorXd x(aabb.dimension);
-		for (int d = 0; d < aabb.dimension; ++d)
-		{
-			x[d] = distrs[d](gen);
-		}
-
-		if (set.contains(x))
-		{
-			samples.push_back(x);
-		}
-
-		if (samples.size() == num_samples)
-		{
-			return samples;
-		}
-	}
-
-	return samples;
-}
-
-void getTransforms(const SET_SAMPLE_STYLE style, const int num_samples, const coterie_msgs::PolymorphicSet& set, std::vector<geometry_msgs::Transform>& tfs)
-{
 	switch (set.type)
 	{
 	case coterie_msgs::PolymorphicSet::TYPE_AABB_SET:
@@ -240,7 +202,8 @@ void getTransforms(const SET_SAMPLE_STYLE style, const int num_samples, const co
 		auto aabb = coterie::deserialize(set.aabb.front());
 		if (SET_SAMPLE_STYLE::RANDOM == style)
 		{
-			tfs = deltasToTransforms(getValidSamples(aabb, num_samples), set.space);
+			coterie::sampleUniform(aabb, num_samples, samples, rng);
+			tfs = deltasToTransforms(samples, set.space);
 		}
 		else
 		{
@@ -253,7 +216,8 @@ void getTransforms(const SET_SAMPLE_STYLE style, const int num_samples, const co
 		auto points = coterie::deserialize(set.point.front());
 		if (SET_SAMPLE_STYLE::RANDOM == style)
 		{
-			tfs = deltasToTransforms(getValidSamples(points, num_samples), set.space);
+			coterie::sampleUniform(points, num_samples, samples, rng);
+			tfs = deltasToTransforms(samples, set.space);
 		}
 		else
 		{
@@ -266,7 +230,8 @@ void getTransforms(const SET_SAMPLE_STYLE style, const int num_samples, const co
 		auto polytope = coterie::deserialize(set.polytope.front());
 		if (SET_SAMPLE_STYLE::RANDOM == style)
 		{
-			tfs = deltasToTransforms(getValidSamples(polytope, num_samples), set.space);
+			coterie::sampleUniform(polytope, num_samples, samples, rng);
+			tfs = deltasToTransforms(samples, set.space);
 		}
 		else
 		{
@@ -279,7 +244,8 @@ void getTransforms(const SET_SAMPLE_STYLE style, const int num_samples, const co
 		auto ellipsoid = coterie::deserialize(set.ellipsoid.front());
 		if (SET_SAMPLE_STYLE::RANDOM == style)
 		{
-			tfs = deltasToTransforms(getValidSamples(ellipsoid, num_samples), set.space);
+			coterie::sampleUniform(ellipsoid, num_samples, samples, rng);
+			tfs = deltasToTransforms(samples, set.space);
 		}
 		else
 		{
@@ -334,6 +300,8 @@ PolymorphicSetDisplay::PolymorphicSetDisplay()
 	                                                  this, SLOT( updateHistoryLength() ));
 	history_length_property_->setMin( 1 );
 	history_length_property_->setMax( 100000 );
+
+	rng = std::make_shared<coterie::RNG>();
 }
 
 PolymorphicSetDisplay::~PolymorphicSetDisplay() = default;
@@ -425,13 +393,14 @@ geometry_msgs::Pose operator*(const geometry_msgs::Pose& P, const geometry_msgs:
 void PolymorphicSetDisplay::processMessage( const MsgType::ConstPtr& msg )
 {
 	last_message_ = msg;
-	ROS_WARN("Got Message!");
 	regenerateDisplay();
 }
 
 void PolymorphicSetDisplay::regenerateDisplay()
 {
-	ROS_WARN("Drawing!");
+	// Check if we have anything to display
+	if (!last_message_) { return; }
+
 	// Here we call the rviz::FrameManager to get the transform from the
 	// fixed frame to the frame in the header of this Imu message.  If
 	// it fails, we can't do anything else so we return.
@@ -466,7 +435,7 @@ void PolymorphicSetDisplay::regenerateDisplay()
 	else
 	{
 		std::vector<geometry_msgs::Transform> tfs;
-		getTransforms(active_style_, active_sample_count_, last_message_->set, tfs);
+		getTransforms(active_style_, active_sample_count_, last_message_->set, *rng, tfs);
 		ROS_WARN_STREAM("Got " << tfs.size() << " transforms.");
 		int count = 0;
 		for (const auto& T : tfs)
