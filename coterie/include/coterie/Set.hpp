@@ -191,6 +191,18 @@ public:
 		return v;
 	}
 
+	ENABLE_IF_STATIC_DIMENSION
+	inline PointT constructPoint() const
+	{
+		return PointT();
+	}
+
+	ENABLE_IF_DYNAMIC_DIMENSION
+	inline PointT constructPoint() const
+	{
+		return PointT(Set<DIM, PointT>::dimension);
+	}
+
 	std::vector<PointT, Eigen::aligned_allocator<PointT>> getCorners() const
 	{
 		// There will be 2^DIM corners to deal with
@@ -198,7 +210,7 @@ public:
 		std::vector<PointT, Eigen::aligned_allocator<PointT>> corners(nCorners);
 		for (int perm = 0; perm < nCorners; ++perm)
 		{
-			PointT pt;
+			PointT pt = constructPoint();
 			for (int d = 0; d < Set<DIM, PointT>::dimension; ++d)
 			{
 				pt[d] = (perm & (1<<d)) ? min[d] : max[d];
@@ -234,7 +246,7 @@ public:
 
 	PointT getCenter() const
 	{
-		PointT c;
+		PointT c = constructPoint();
 		for (int d = 0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			c[d] = (max[d] + min[d])/2.0;
@@ -244,7 +256,7 @@ public:
 
 	PointT getDimensions() const
 	{
-		PointT c;
+		PointT c = constructPoint();
 		for (int d = 0; d < Set<DIM, PointT>::dimension; ++d)
 		{
 			c[d] = (max[d] - min[d]);

@@ -32,7 +32,9 @@
 
 #include "coterie/QuaternionTraits.hpp"
 
+#include "coterie/sampling/extents.hpp"
 #include "coterie/sampling/uniform_sample.hpp"
+#include "coterie/sampling/halton.hpp"
 
 #include "coterie/serialization/PolymorphicSetMsg.hpp"
 
@@ -57,8 +59,35 @@
 
 #include <random>
 
+
 namespace coterie_rviz_plugin
 {
+
+template <typename SetT, typename RosterT>
+bool getExemplars(const SetT& set, const SET_SAMPLE_STYLE style, const int numSamples, coterie::RNG& rng, RosterT& examples)
+{
+	switch (style)
+	{
+	case SET_SAMPLE_STYLE::EXTENTS:
+	{
+		coterie::getExtents(set, examples);
+		examples.resize(std::min(static_cast<int>(examples.size()), numSamples));
+		return true;
+	}
+	case SET_SAMPLE_STYLE::RANDOM:
+	{
+		coterie::sampleUniform(set, numSamples, examples, rng);
+		break;
+	}
+	case SET_SAMPLE_STYLE::HALTON:
+	{
+		coterie::sampleHalton(set, numSamples, examples, rng);
+		break;
+	}
+	}
+
+	return false;
+}
 
 void visualizePosition(const coterie_msgs::PolymorphicSet& set, visualization_msgs::MarkerArray& ma)
 {
@@ -200,64 +229,25 @@ void getTransforms(const SET_SAMPLE_STYLE style, const int num_samples, const co
 	case coterie_msgs::PolymorphicSet::TYPE_AABB_SET:
 	{
 		auto aabb = coterie::deserialize(set.aabb.front());
-		if (SET_SAMPLE_STYLE::RANDOM == style)
-		{
-			coterie::sampleUniform(aabb, num_samples, samples, rng);
-			tfs = deltasToTransforms(samples, set.space);
-		}
-		else
-		{
-			tfs = deltasToTransforms(aabb.getCorners(), set.space);
-		}
+		getExemplars(aabb, style, num_samples, rng, samples);
 		break;
 	}
 	case coterie_msgs::PolymorphicSet::TYPE_POINT_SET:
 	{
 		auto points = coterie::deserialize(set.point.front());
-		if (SET_SAMPLE_STYLE::RANDOM == style)
-		{
-			coterie::sampleUniform(points, num_samples, samples, rng);
-			tfs = deltasToTransforms(samples, set.space);
-		}
-		else
-		{
-			tfs = deltasToTransforms(points.members, set.space);
-		}
+		getExemplars(points, style, num_samples, rng, samples);
 		break;
 	}
 	case coterie_msgs::PolymorphicSet::TYPE_POLYTOPE_SET:
 	{
 		auto polytope = coterie::deserialize(set.polytope.front());
-		if (SET_SAMPLE_STYLE::RANDOM == style)
-		{
-			coterie::sampleUniform(polytope, num_samples, samples, rng);
-			tfs = deltasToTransforms(samples, set.space);
-		}
-		else
-		{
-			tfs = deltasToTransforms(polytope.supportPoints.members, set.space);
-		}
+		getExemplars(polytope, style, num_samples, rng, samples);
 		break;
 	}
 	case coterie_msgs::PolymorphicSet::TYPE_ELLIPSOIDAL_SET:
 	{
 		auto ellipsoid = coterie::deserialize(set.ellipsoid.front());
-		if (SET_SAMPLE_STYLE::RANDOM == style)
-		{
-			coterie::sampleUniform(ellipsoid, num_samples, samples, rng);
-			tfs = deltasToTransforms(samples, set.space);
-		}
-		else
-		{
-			Eigen::MatrixXd sA = ellipsoid.semiAxes();
-			std::vector<Eigen::VectorXd> deltas(ellipsoid.dimension * 2);
-			for (int i = 0; i < ellipsoid.dimension; ++i)
-			{
-				deltas[i] = sA.col(i);
-				deltas[i + ellipsoid.dimension] = -deltas[i];
-			}
-			tfs = deltasToTransforms(deltas, set.space);
-		}
+		getExemplars(ellipsoid, style, num_samples, rng, samples);
 		break;
 	}
 //	case coterie_msgs::PolymorphicSet::TYPE_RASTER_SET:
@@ -268,6 +258,9 @@ void getTransforms(const SET_SAMPLE_STYLE style, const int num_samples, const co
 	default:
 		throw std::runtime_error("Set type '" + std::to_string(set.type) + "' unknown.");
 	}
+
+
+	tfs = deltasToTransforms(samples, set.space);
 }
 
 PolymorphicSetDisplay::PolymorphicSetDisplay()
@@ -282,6 +275,7 @@ PolymorphicSetDisplay::PolymorphicSetDisplay()
 	                                         this, SLOT(updateStyle()));
 	style_property_->addOption("Extents", SET_SAMPLE_STYLE::EXTENTS);
 	style_property_->addOption("Random", SET_SAMPLE_STYLE::RANDOM);
+	style_property_->addOption("Halton", SET_SAMPLE_STYLE::HALTON);
 
 	sample_count_property_ = new rviz::IntProperty("Number of Samples", 10,
 	                                               "Number of sampled poses to display.",

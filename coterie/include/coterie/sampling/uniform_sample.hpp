@@ -32,6 +32,7 @@
 
 #include "coterie/Set.hpp"
 #include "coterie/PointSet.hpp"
+#include "coterie/construction.hpp"
 #include "coterie/sampling/RNG.h"
 
 #include <cfloat> // DBL_MAX
@@ -39,22 +40,6 @@
 
 namespace coterie
 {
-
-template<int DIM,
-	typename PointT=Eigen::Matrix<double, DIM, 1>,
-	typename std::enable_if<Dynamic != DIM>::type* = nullptr>
-inline PointT zeroVector(const Set<DIM, PointT>&)
-{
-	return PointT::Zero();
-}
-
-template<int DIM,
-	typename PointT=Eigen::Matrix<double, DIM, 1>,
-	typename std::enable_if<Dynamic == DIM>::type* = nullptr>
-inline PointT zeroVector(const Set<DIM, PointT>& set)
-{
-	return PointT::Zero(set.dimension);
-}
 
 template<int DIM,
 	typename PointT=Eigen::Matrix<double, DIM, 1>,

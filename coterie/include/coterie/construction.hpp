@@ -73,6 +73,22 @@ Eigen::Matrix<double, -1, -1> constructMatrix<-1, Eigen::Matrix<double, -1, -1>>
 { return Eigen::Matrix<double, -1, -1>(d, d); }
 
 template<int DIM,
+	typename PointT,
+	typename std::enable_if<Dynamic != DIM>::type* = nullptr>
+inline PointT zeroVector(const Set<DIM, PointT>&)
+{
+	return PointT::Zero();
+}
+
+template<int DIM,
+	typename PointT,
+	typename std::enable_if<Dynamic == DIM>::type* = nullptr>
+inline PointT zeroVector(const Set<DIM, PointT>& set)
+{
+	return PointT::Zero(set.dimension);
+}
+
+template<int DIM,
 	typename PointT=Eigen::Matrix<double, DIM, 1>,
 	typename RosterT=std::set<Eigen::Matrix<double, DIM, 1>,
 	                          vector_less_than<DIM>,

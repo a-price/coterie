@@ -60,7 +60,8 @@ namespace coterie_rviz_plugin
 enum SET_SAMPLE_STYLE
 {
 	EXTENTS,
-	RANDOM
+	RANDOM,
+	HALTON
 };
 
 class PolymorphicSetVisual;
