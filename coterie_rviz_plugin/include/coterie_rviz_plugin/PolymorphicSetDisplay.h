@@ -61,7 +61,8 @@ enum SET_SAMPLE_STYLE
 {
 	EXTENTS,
 	RANDOM,
-	HALTON
+	HALTON,
+	MEDIAN,
 };
 
 class PolymorphicSetVisual;

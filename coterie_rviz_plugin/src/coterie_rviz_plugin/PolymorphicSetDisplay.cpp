@@ -84,6 +84,11 @@ bool getExemplars(const SetT& set, const SET_SAMPLE_STYLE style, const int numSa
 		coterie::sampleHalton(set, numSamples, examples, rng);
 		break;
 	}
+	case SET_SAMPLE_STYLE::MEDIAN:
+	{
+		coterie::append(examples, set.getAABB().getCenter());
+		break;
+	}
 	}
 
 	return false;
@@ -276,8 +281,9 @@ PolymorphicSetDisplay::PolymorphicSetDisplay()
 	style_property_->addOption("Extents", SET_SAMPLE_STYLE::EXTENTS);
 	style_property_->addOption("Random", SET_SAMPLE_STYLE::RANDOM);
 	style_property_->addOption("Halton", SET_SAMPLE_STYLE::HALTON);
+	style_property_->addOption("Median", SET_SAMPLE_STYLE::MEDIAN);
 
-	sample_count_property_ = new rviz::IntProperty("Number of Samples", 10,
+	sample_count_property_ = new rviz::IntProperty("Number of Samples", 25,
 	                                               "Number of sampled poses to display.",
 	                                               this, SLOT(updateSampleCount()));
 
@@ -350,8 +356,6 @@ void PolymorphicSetDisplay::updateSampleCount()
 // Set the current color and alpha values for each visual.
 void PolymorphicSetDisplay::updateColorAndAlpha()
 {
-	applyColorAndAlpha(*active_markers_);
-
 	regenerateDisplay();
 }
 
