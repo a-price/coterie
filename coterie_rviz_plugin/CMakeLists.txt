@@ -58,8 +58,8 @@ add_definitions(-DQT_NO_KEYWORDS)
 ## Declare a C++ library
 file(GLOB_RECURSE IncludeFiles "include/*")
 add_library(${PROJECT_NAME} SHARED
-  src/coterie_rviz_plugin/PolymorphicSetDisplay.cpp
-  src/coterie_rviz_plugin/PolymorphicSetVisual.cpp
+  src/${PROJECT_NAME}/PolymorphicSetDisplay.cpp
+  src/${PROJECT_NAME}/PolymorphicSetVisual.cpp
   ${IncludeFiles} # Needed for AutoMOC
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
