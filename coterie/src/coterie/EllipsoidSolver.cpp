@@ -47,7 +47,7 @@ namespace coterie
 // NB: you have to call import_array() or PyArray_SimpleNewFromData will segfault
 void init_numpy()
 {
-	import_array();
+	import_array1();
 }
 
 class EllipsoidSolver::EllipsoidSolverImpl
@@ -67,7 +67,7 @@ public:
 
 		Py_Initialize();
 		init_numpy();
-		pModuleName = PyString_FromString(moduleName.c_str());
+		pModuleName = PyUnicode_FromString(moduleName.c_str());
 		pModule = PyImport_Import(pModuleName);
 		Py_DECREF(pModuleName);
 

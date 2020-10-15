@@ -42,6 +42,7 @@
 #include "coterie/PolytopeSet.hpp"
 
 #include <algorithm>
+#include <numeric>
 
 namespace coterie
 {

@@ -54,10 +54,10 @@ template<int DIM>
 using Bounds = std::array<std::pair<double, double>, DIM>;
 
 template<int DIM>
-using Index = boost::array<long int, DIM>;
+using Index = std::array<long int, DIM>;
 
 template<int DIM>
-using Shape = boost::array<size_t, DIM>;
+using Shape = std::array<size_t, DIM>;
 
 template<int DIM, typename PointT>
 Index<DIM> getCellFromPoint(const PointT& point, const Shape<DIM>& shape, const Bounds<DIM>& bounds);
