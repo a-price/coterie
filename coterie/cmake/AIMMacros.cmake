@@ -54,15 +54,7 @@ macro(enable_coverage_build)
 endmacro()
 
 macro(find_eigen3_ros)
-  find_package(Eigen3 QUIET)
-  if(NOT EIGEN3_FOUND)
-    # Fallback to cmake_modules
-    find_package(cmake_modules REQUIRED)
-    find_package(Eigen REQUIRED)
-    set(EIGEN3_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
-    set(EIGEN3_DEFINITIONS ${EIGEN_DEFINITIONS})
-  else()
-    set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
-  endif()
+  find_package(Eigen3 REQUIRED)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
 endmacro()
 
