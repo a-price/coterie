@@ -59,9 +59,11 @@ typedef CGAL::Polyhedron_3<K>                     Polyhedron_3;
 namespace CGAL
 {
 
+inline
 ::Polyhedron_3::Facet_const_iterator begin(const ::Polyhedron_3 &poly)
 { return poly.facets_begin(); }
 
+inline
 ::Polyhedron_3::Facet_const_iterator end(const ::Polyhedron_3 &poly)
 { return poly.facets_end(); }
 
@@ -70,6 +72,7 @@ namespace CGAL
 namespace coterie
 {
 
+inline
 std_msgs::ColorRGBA randomColor()
 {
 	// Random number generation
@@ -87,15 +90,10 @@ std_msgs::ColorRGBA randomColor()
 	rgb.g = g/norm;
 	rgb.b = b/norm;
 
-//	rgb.r = 0.0; //rand() / (float)RAND_MAX;
-//	float g = rand() / (float)RAND_MAX;
-//	float b = rand() / (float)RAND_MAX;
-//	rgb.g = g/(g*g+b*b);
-//	rgb.b = b/(g*g+b*b);
-
 	return rgb;
 }
 
+inline
 geometry_msgs::Point cvtPoint(const CGAL::Exact_predicates_inexact_constructions_kernel::Point_3& p)
 {
 	geometry_msgs::Point pt;
@@ -192,19 +190,16 @@ visualization_msgs::Marker visualizePosition(const PolytopeSet<DIM, PointT, Rost
 		for (auto facet : *poly)
 		{
 			Polyhedron_3::Halfedge_handle h = facet.halfedge();
+			std_msgs::ColorRGBA rgb = randomColor();
 			int vertex_count = 0;
 			do
 			{
 				Point_3 v = h->vertex()->point();
 				m.points.emplace_back(cvtPoint(v));
+				m.colors.emplace_back(rgb);
 				h = h->next();
 				++vertex_count;
 			} while (h != facet.halfedge());
-
-			std_msgs::ColorRGBA rgb = randomColor();
-			m.colors.emplace_back(rgb);
-			m.colors.emplace_back(rgb);
-			m.colors.emplace_back(rgb);
 
 			if (3 != vertex_count)
 				std::cout << "Facet contains " << vertex_count << " vertices." << std::endl;
